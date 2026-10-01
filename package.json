@@ -49,6 +49,7 @@
     "verify": "tsc --noEmit && expo lint && prettier --check . && node scripts/check-logical.mjs && jest --ci && expo export --platform web --output-dir dist"
   },
   "private": true,
+  "license": "MIT",
   "overrides": {
     "eslint-plugin-react-native-a11y": {
       "eslint": "$eslint"

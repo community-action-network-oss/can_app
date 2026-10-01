@@ -49,3 +49,7 @@ typed `openapi-fetch` client in `src/api/client.ts`.
 ## Contributing
 
 See [../CONTRIBUTING.md](../CONTRIBUTING.md).
+
+## License
+
+MIT, see [LICENSE](LICENSE).
