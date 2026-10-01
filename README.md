@@ -1,7 +1,7 @@
 # can_app
 
 The universal Expo app (web, iOS, Android from one codebase) for the Community Action Network.
-Tonight it is a shell: router, providers, civic component foundation, i18n, design tokens, and a
+Currently the app is a shell: router, providers, civic component foundation, i18n, design tokens, and a
 home screen that shows whether `can_server` is reachable.
 
 ## Web first
