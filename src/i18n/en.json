@@ -1,0 +1,13 @@
+{
+  "common.appName": "Community Action Network",
+  "common.loading": "Loading",
+  "common.error.title": "That did not work",
+  "common.error.body": "Something went wrong on our side. Your work is safe. Try again in a moment.",
+  "common.error.retry": "Try again",
+  "home.purpose": "A place to raise problems that affect a community and work on them in the open. This app is an early preview.",
+  "home.health.heading": "Connection",
+  "home.health.loading": "Checking the connection to the server",
+  "home.health.ok": "Connected to the server. Everything is working.",
+  "home.health.degraded": "Connected to the server, but some parts are not working yet. {part, select, db {The database is not responding.} other {Please try again soon.}}",
+  "home.health.error": "We could not reach the server. Check that it is running, then try again."
+}
