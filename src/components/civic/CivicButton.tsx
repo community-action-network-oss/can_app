@@ -1,7 +1,6 @@
-import { useState } from 'react';
-import { Pressable, Text, type PressableProps } from 'react-native';
+import type { PressableProps } from 'react-native';
 
-import { radius, size, space, type, useTheme } from '../../theme';
+import { Button, ButtonText } from '../ui/button';
 
 // Every button must say what it does: accessibilityLabel is required, not optional.
 type Props = Omit<PressableProps, 'style' | 'children' | 'role' | 'accessibilityRole'> & {
@@ -10,55 +9,29 @@ type Props = Omit<PressableProps, 'style' | 'children' | 'role' | 'accessibility
   variant?: 'primary' | 'secondary';
 };
 
-export function CivicButton({
-  label,
-  variant = 'primary',
-  disabled,
-  onFocus,
-  onBlur,
-  ...rest
-}: Props) {
-  const { color } = useTheme();
-  const [focused, setFocused] = useState(false);
-  const primary = variant === 'primary';
+// min-h/min-w-11 = 44pt (size.minTarget). Focus ring comes from the gluestack Button (ring-2 on focus-visible).
+const base = 'min-h-11 min-w-11 px-4 py-2 border-2';
+const styles = {
+  primary: { button: `${base} border-primary`, text: 'text-label' },
+  secondary: {
+    button: `${base} bg-can-surface border-can-control-border data-[hover=true]:bg-can-surface-muted data-[active=true]:bg-can-surface-muted`,
+    text: 'text-label text-can-text',
+  },
+};
+
+export function CivicButton({ label, variant = 'primary', disabled, ...rest }: Props) {
+  const s = styles[variant];
   return (
-    <Pressable
+    <Button
       {...rest}
       role="button"
+      variant="default"
+      className={s.button}
       disabled={disabled}
+      isDisabled={!!disabled}
       accessibilityState={{ disabled: !!disabled }}
-      onFocus={(e) => {
-        setFocused(true);
-        onFocus?.(e);
-      }}
-      onBlur={(e) => {
-        setFocused(false);
-        onBlur?.(e);
-      }}
-      style={({ pressed }) => ({
-        minHeight: size.minTarget,
-        minWidth: size.minTarget,
-        paddingHorizontal: space('4'),
-        paddingVertical: space('2'),
-        borderRadius: radius.md,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: primary ? color.primary : color.surface,
-        borderWidth: size.focusRingWidth,
-        borderColor: focused ? color.focus : primary ? color.primary : color.controlBorder,
-        opacity: disabled ? 0.5 : pressed ? 0.85 : 1,
-      })}
     >
-      <Text
-        style={{
-          color: primary ? color.onPrimary : color.text,
-          fontSize: type.label.size,
-          lineHeight: type.label.line,
-          fontWeight: '600',
-        }}
-      >
-        {label}
-      </Text>
-    </Pressable>
+      <ButtonText className={s.text}>{label}</ButtonText>
+    </Button>
   );
 }

@@ -1,6 +1,7 @@
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 
-import { radius, space, useTheme } from '../../theme';
+import { useTheme } from '../../theme';
+import { Box } from '../ui/box';
 import { CivicButton } from './CivicButton';
 import { CivicHeading } from './CivicHeading';
 import { CivicText } from './CivicText';
@@ -19,19 +20,12 @@ export function StatusMessage({ state, title, message, action }: Props) {
   const { color } = useTheme();
   const urgent = state === 'error';
   return (
-    <View
+    <Box
       // polite for progress and results, assertive only for errors
       accessibilityLiveRegion={urgent ? 'assertive' : 'polite'}
       testID="status-message"
       role={urgent ? 'alert' : 'status'}
-      style={{
-        gap: space('2'),
-        padding: space('4'),
-        borderRadius: radius.md,
-        borderWidth: 1,
-        borderColor: urgent ? color.urgent : color.border,
-        backgroundColor: urgent ? color.urgentSurface : color.surface,
-      }}
+      className={`gap-2 p-4 rounded-md border ${urgent ? 'border-can-urgent bg-can-urgent-surface' : 'border-can-border bg-can-surface'}`}
     >
       {state === 'loading' && (
         <ActivityIndicator color={color.primary} accessibilityLabel={message} />
@@ -46,6 +40,6 @@ export function StatusMessage({ state, title, message, action }: Props) {
           variant="secondary"
         />
       ) : null}
-    </View>
+    </Box>
   );
 }

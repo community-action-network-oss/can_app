@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { Text, type TextProps } from 'react-native';
+import type { TextProps } from 'react-native';
 
-import { type, useTheme } from '../../theme';
+import { Text } from '../ui/text';
 
 export type TextVariant = 'body' | 'bodyStrong' | 'label' | 'caption';
 
@@ -11,18 +11,18 @@ type Props = Omit<TextProps, 'style'> & {
   children: ReactNode;
 };
 
+const cls = {
+  body: 'text-body',
+  bodyStrong: 'text-body-strong',
+  label: 'text-label',
+  caption: 'text-caption',
+} as const;
+
 export function CivicText({ variant = 'body', muted = false, ...rest }: Props) {
-  const { color } = useTheme();
-  const t = type[variant];
   return (
     <Text
       {...rest}
-      style={{
-        color: muted ? color.textMuted : color.text,
-        fontSize: t.size,
-        lineHeight: t.line,
-        fontWeight: String(t.weight) as '400',
-      }}
+      className={`${cls[variant]} ${muted ? 'text-can-text-muted' : 'text-can-text'}`}
     />
   );
 }
