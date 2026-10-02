@@ -256,6 +256,33 @@ it('read-only mode shows values and no buttons', async () => {
   expect(screen.queryByLabelText('Submit')).toBeNull();
 });
 
+it('submitLabel replaces the final button label', async () => {
+  const schema = { id: 't', properties: { a: field('text') } };
+  await show({ schema, messages: { 'm.text': 'Fine' }, submitLabel: 'Save draft' });
+  expect(screen.getByLabelText('Save draft')).toBeTruthy();
+  expect(screen.queryByLabelText('Submit')).toBeNull();
+});
+
+it('read-only mode keeps section navigation and never submits', async () => {
+  const schema = {
+    id: 't',
+    properties: { a: field('text', {}, 'g1'), b: field('text', {}, 'g2') },
+  };
+  await show({
+    schema,
+    messages: { 'm.text': 'Fine' },
+    initial: { a: 'one', b: 'two' },
+    readOnly: true,
+  });
+  expect(screen.getByText('one')).toBeTruthy();
+  expect(screen.queryByLabelText('Back')).toBeNull();
+  await fireEvent.press(screen.getByLabelText('Next'));
+  expect(screen.getByText('two')).toBeTruthy();
+  expect(screen.getByLabelText('Back')).toBeTruthy();
+  expect(screen.queryByLabelText('Next')).toBeNull();
+  expect(screen.queryByLabelText('Submit')).toBeNull();
+});
+
 it('label stays associated with its control and error in rtl', async () => {
   const schema = { id: 't', properties: { a: field('text', {}, 'g') }, required: ['a'] };
   const r = await show({ schema, messages: { 'm.text': 'Fine' } }, 'rtl');

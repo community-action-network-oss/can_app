@@ -56,6 +56,7 @@ export function SourcesPart({ fieldKey, schemaVersion, content, actions }: Props
           value={edit ?? { [fieldKey]: saved }}
           onChange={setEdit}
           onSubmit={(v) => save(v)}
+          submitLabel={t('form.saveDraft')}
           busy={actions.patch.isPending}
           formError={err && !err.fieldErrors ? t('common.error.generic') : undefined}
           fieldErrors={mapFieldErrors(err?.status === 400 ? err.fieldErrors : undefined)}

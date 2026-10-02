@@ -156,7 +156,7 @@ it('a version no longer served keeps the draft read-only with the message', asyn
   await show();
   expect(await screen.findByTestId('version-note')).toBeTruthy();
   expect(screen.getByText(/no longer available/)).toBeTruthy();
-  expect(screen.queryByLabelText('Next')).toBeNull();
+  expect(screen.queryByLabelText('Submit')).toBeNull();
 });
 
 it('submit sends content with the schema stamps and maps pointer errors to fields', async () => {

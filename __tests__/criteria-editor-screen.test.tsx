@@ -126,7 +126,7 @@ it('shows the criteria from the schema, a synthetic example, and saves with the 
     screen.getByText('Example, synthetic: Under 5 days for 90 percent of cases.'),
   ).toBeTruthy();
   await fireEvent.changeText(screen.getByLabelText('The criterion'), 'Bins emptied three times');
-  await fireEvent.press(screen.getByLabelText('Submit'));
+  await fireEvent.press(screen.getByLabelText('Save draft'));
   await waitFor(() =>
     expect(patched).toEqual({
       finalAcceptanceCriteria: [{ a: 'Bins emptied three times', b: '2 per week' }],
@@ -144,7 +144,7 @@ it('says one criterion is needed when the list is empty, and maps the server ref
   expect(screen.getByText('At least one final criterion is needed.')).toBeTruthy();
   await fireEvent.press(await screen.findByLabelText('Add another: Criteria'));
   await fireEvent.changeText(screen.getByLabelText('The criterion'), 'Something we can count');
-  await fireEvent.press(screen.getByLabelText('Submit'));
+  await fireEvent.press(screen.getByLabelText('Save draft'));
   expect(await screen.findByText('At least one is needed')).toBeTruthy();
 });
 
@@ -164,9 +164,9 @@ it('shows a server flag as a neutral note with text and an icon', async () => {
 it('turns read only when the server says you may not edit', async () => {
   patchStatus = 403;
   await wrap(<CriteriaRoute />);
-  await fireEvent.press(await screen.findByLabelText('Submit'));
+  await fireEvent.press(await screen.findByLabelText('Save draft'));
   expect(await screen.findByText('You cannot open this problem here.')).toBeTruthy();
-  await waitFor(() => expect(screen.queryByLabelText('Submit')).toBeNull());
+  await waitFor(() => expect(screen.queryByLabelText('Save draft')).toBeNull());
 });
 
 it('refuses a problem that is not editable', async () => {
@@ -188,7 +188,7 @@ it('CriteriaEditor works for a stage owner from the same code', async () => {
     />,
   );
   expect(screen.getByTestId('criteria-editor-stage-2')).toBeTruthy();
-  await fireEvent.press(screen.getByLabelText('Submit'));
+  await fireEvent.press(screen.getByLabelText('Save draft'));
   await waitFor(() =>
     expect(onSave).toHaveBeenCalledWith([{ a: 'Pilot ran for 8 weeks', b: 'x' }]),
   );

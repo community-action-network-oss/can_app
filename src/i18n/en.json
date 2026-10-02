@@ -131,6 +131,7 @@
   "form.progress.fields": "{done, number} of {required, number} needed fields answered",
   "form.version": "Form version {version}",
   "form.submit": "Submit",
+  "form.saveDraft": "Save draft",
   "form.field.why": "Why we ask: {text}",
   "form.field.exampleLabel": "Example, synthetic: {text}",
   "form.field.unknown": "I do not know this yet",

@@ -91,6 +91,7 @@ export function CriteriaEditor(p: CriteriaEditorProps) {
         onChange={setEdit}
         onSubmit={(v) => p.onSave((v[p.fieldKey] as Value[] | undefined) ?? [])}
         readOnly={p.readOnly}
+        submitLabel={t('form.saveDraft')}
         busy={p.busy}
         fieldErrors={p.fieldErrors}
         formError={p.formError}

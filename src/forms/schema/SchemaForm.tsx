@@ -37,6 +37,8 @@ type Props = {
   /** Called with the answers (without the unknown map) and the unknown map. May throw ApiError-like fieldErrors. */
   onSubmit: (value: Value, unknown: Record<string, string>) => unknown;
   readOnly?: boolean;
+  /** Resolved label of the final-section button. Defaults to "Submit". */
+  submitLabel?: string;
   /** Server field errors keyed by dotted path (ApiError.fieldErrors). */
   fieldErrors?: Record<string, string>;
   formError?: string;
@@ -159,32 +161,30 @@ export function SchemaForm(p: Props) {
       {blocked && last ? (
         <CivicText variant="caption">{t('form.field.unsupportedBlocks')}</CivicText>
       ) : null}
-      {p.readOnly ? null : (
-        <Box className="gap-2">
-          {index > 0 ? (
-            <CivicButton
-              variant="secondary"
-              label={t('common.back')}
-              accessibilityLabel={t('common.back')}
-              onPress={() => setIndex(index - 1)}
-            />
-          ) : null}
-          {last ? (
-            <SubmitButton
-              label={t('form.submit')}
-              busy={p.busy}
-              disabled={blocked}
-              onPress={() => void submit()}
-            />
-          ) : (
-            <CivicButton
-              label={t('common.next')}
-              accessibilityLabel={t('common.next')}
-              onPress={() => setIndex(index + 1)}
-            />
-          )}
-        </Box>
-      )}
+      <Box className="gap-2">
+        {index > 0 ? (
+          <CivicButton
+            variant="secondary"
+            label={t('common.back')}
+            accessibilityLabel={t('common.back')}
+            onPress={() => setIndex(index - 1)}
+          />
+        ) : null}
+        {!last ? (
+          <CivicButton
+            label={t('common.next')}
+            accessibilityLabel={t('common.next')}
+            onPress={() => setIndex(index + 1)}
+          />
+        ) : p.readOnly ? null : (
+          <SubmitButton
+            label={p.submitLabel ?? t('form.submit')}
+            busy={p.busy}
+            disabled={blocked}
+            onPress={() => void submit()}
+          />
+        )}
+      </Box>
     </Box>
   );
 }

@@ -9,7 +9,7 @@ import { ApiError } from '../../api/errors';
 import { unwrap } from '../../api/unwrap';
 import { Box, CivicButton, CivicHeading, CivicText, StatusMessage } from '../../components/civic';
 import { SchemaForm } from '../../forms/schema/SchemaForm';
-import { sectionsOf, type Schema, type Value } from '../../forms/schema/model';
+import type { Schema, Value } from '../../forms/schema/model';
 import { useContentSchema } from '../../forms/schema/useContentSchema';
 import { useT, type MessageId } from '../../i18n';
 
@@ -23,34 +23,24 @@ const PANEL = {
 } as const;
 const noop = () => undefined;
 
-/** The submitted body, read-only. SchemaForm has no section navigation when read-only, so each section gets its own reduced schema. */
+/** The submitted body, read-only. One read-only SchemaForm over the real schema: readers page through sections with Back and Next. */
 function Summary({ p }: { p: Proposal }) {
   const t = useT();
   const q = useContentSchema('policy_proposal', { version: p.schemaVersion });
   const [value] = useState<Value>(p.body as Value);
   if (!q.data) return <CivicText>{p.changeSummary}</CivicText>;
   const schema = q.data.schema as Schema;
-  const props = (schema as unknown as { properties: Record<string, unknown> }).properties;
   return (
     <Box className="gap-4" testID="policy-summary">
       <CivicHeading level={2}>{t('policy.view.summary')}</CivicHeading>
-      {sectionsOf(schema).map((s) => (
-        <SchemaForm
-          key={s.id}
-          readOnly
-          schema={
-            {
-              ...schema,
-              required: [],
-              properties: Object.fromEntries(s.fields.map((f) => [f.key, props[f.key]])),
-            } as Schema
-          }
-          messages={q.data.messages}
-          value={value}
-          onChange={noop}
-          onSubmit={noop}
-        />
-      ))}
+      <SchemaForm
+        readOnly
+        schema={schema}
+        messages={q.data.messages}
+        value={value}
+        onChange={noop}
+        onSubmit={noop}
+      />
     </Box>
   );
 }
