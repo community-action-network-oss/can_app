@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 import {
   CivicButton,
@@ -8,11 +8,21 @@ import {
   StatusMessage,
 } from '../src/components/civic';
 import { useT } from '../src/i18n';
+import { ProblemList } from '../src/problems/ProblemList';
+import type { Filters } from '../src/problems/useProblems';
 import { useHealth } from '../src/hooks/useHealth';
 
 export default function Home() {
   const t = useT();
   const health = useHealth();
+  const params = useLocalSearchParams<Record<keyof Filters, string | string[]>>();
+  const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) || undefined;
+  // The URL holds the filters so the view is shareable and survives reload.
+  const filters: Filters = {
+    q: one(params.q),
+    state: one(params.state),
+    jurisdictionId: one(params.jurisdictionId),
+  };
 
   return (
     <Screen>
@@ -28,6 +38,12 @@ export default function Home() {
         label={t('home.profile')}
         accessibilityLabel={t('home.profile')}
         onPress={() => router.push('/profile/welcome')}
+      />
+      <ProblemList
+        filters={filters}
+        onFilters={(f) =>
+          router.setParams({ q: f.q, state: f.state, jurisdictionId: f.jurisdictionId })
+        }
       />
       <CivicHeading level={2}>{t('home.health.heading')}</CivicHeading>
       {health.isPending ? (
