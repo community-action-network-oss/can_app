@@ -181,8 +181,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** One public problem with help_needed */
+        /** One problem: public after publish, tombstone for withdrawn items, private drafts only to the initiator */
         get: operations["getPublicProblem"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/problems/{id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Timeline of a visible problem, oldest first; payloads are never returned */
+        get: operations["listProblemEvents"];
         put?: never;
         post?: never;
         delete?: never;
@@ -261,6 +278,50 @@ export interface components {
             handle: string;
             role: string;
         };
+        ProblemDetailDto: {
+            affected: string | null;
+            authorHandle: string | null;
+            coarseArea: string | null;
+            condition: string | null;
+            desiredOutcome: string | null;
+            duplicateOf: string | null;
+            explanation: string;
+            help_needed: components["schemas"]["HelpNeededDto"];
+            id: string;
+            investigationNeeded: boolean;
+            isSeed: boolean;
+            jurisdiction: string | null;
+            label: string;
+            nextAction: string;
+            observed: string | null;
+            pauseReason: string | null;
+            policyVersion: string | null;
+            publishedAt: string | null;
+            reopened: boolean;
+            resumeCondition: string | null;
+            /** @description A count only; review content is never public. */
+            reviewCount: number;
+            state: string;
+            syntheticEvidence: boolean;
+            title: string | null;
+            tombstone: components["schemas"]["TombstoneDto"] | null;
+            transitional: boolean;
+            uncertain: string | null;
+        };
+        ProblemEventDto: {
+            /** @description Handle, only for public event types. */
+            actor: string | null;
+            fromState: string | null;
+            id: string;
+            occurredAt: string;
+            reason: string | null;
+            toState: string | null;
+            type: string;
+        };
+        ProblemEventPageDto: {
+            items: components["schemas"]["ProblemEventDto"][];
+            nextCursor: string | null;
+        };
         PublicProblemDto: {
             coarseArea: string | null;
             help_needed: components["schemas"]["HelpNeededDto"];
@@ -292,6 +353,12 @@ export interface components {
         };
         SignUpResponseDto: {
             accepted: boolean;
+        };
+        TombstoneDto: {
+            reason: string | null;
+            /** @enum {boolean} */
+            tombstone: true;
+            tombstonedAt: string;
         };
         VerifyDto: {
             code: string;
@@ -901,7 +968,63 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PublicProblemDto"];
+                    "application/json": components["schemas"]["ProblemDetailDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    listProblemEvents: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemEventPageDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
                 };
             };
             404: {
