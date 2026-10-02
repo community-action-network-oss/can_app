@@ -98,5 +98,12 @@
   "profile.topic.noise": "Noise",
   "profile.topic.health": "Health care",
   "profile.topic.schools": "Schools",
-  "home.profile": "Set up my profile"
+  "home.profile": "Set up my profile",
+  "common.error.generic": "Something went wrong. Your work is safe. Try again.",
+  "common.offline.banner": "You are offline. You can read what is already loaded. Changes will wait until you reconnect.",
+  "common.validation.required": "This field is needed",
+  "common.validation.tooLong": "That is {count, number} characters. The most is {max, number}.",
+  "common.field.needed": "needed",
+  "common.field.counter": "{count, number} / {max, number} characters",
+  "common.submitting": "Sending"
 }
