@@ -11,6 +11,7 @@ import { SchemaForm } from '../../forms/schema/SchemaForm';
 import { UNKNOWN_KEY, type Schema, type Value } from '../../forms/schema/model';
 import { useContentSchema } from '../../forms/schema/useContentSchema';
 import { useT } from '../../i18n';
+import { MigrationBanner } from './MigrationBanner';
 import { ContextProfileRows } from './ContextProfileRows';
 import { mapFieldErrors, withoutFields } from './schemaParts';
 import { schemaErrorId } from './schemaErrors';
@@ -98,6 +99,7 @@ function Body({ id, dto, retired, linked, context }: Props & { dto: Dto; retired
       <CivicText variant="caption" muted>
         {t('prep.private')}
       </CivicText>
+      {id !== 'new' ? <MigrationBanner id={id} version={String(dto.schema_version)} /> : null}
       {readOnly ? (
         <CivicText variant="bodyStrong" testID="version-note">
           {t(retired ? 'form.version.retired' : 'form.version.newer')}
@@ -114,6 +116,13 @@ function Body({ id, dto, retired, linked, context }: Props & { dto: Dto; retired
         formError={formError}
         fieldErrors={mapFieldErrors(err?.status === 400 ? err.fieldErrors : undefined)}
       />
+      {schemaErrorId(err) === 'form.version.migrate' ? (
+        <CivicButton
+          label={t('form.version.move')}
+          accessibilityLabel={t('form.version.move')}
+          onPress={() => router.push({ pathname: '/submit/[id]/migrate', params: { id } })}
+        />
+      ) : null}
       <SavedIndicator
         status={d.status}
         savedAt={d.savedAt}

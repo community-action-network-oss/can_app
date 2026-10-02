@@ -21,3 +21,7 @@ export async function saveDraft(id: string, content: Record<string, unknown>, s:
   versions.set(d.id, d.version);
   return d.id;
 }
+
+/** The last server draft version this session saw, or undefined (the migration POST needs it). */
+export const draftVersion = (id: string) => versions.get(id);
+export const rememberVersion = (id: string, v: number) => void versions.set(id, v);

@@ -224,3 +224,19 @@ export function progress(root: Schema, value: Value) {
     done: needed.filter((f) => isAnswered(value[f.key], unk, f.key)).length,
   };
 }
+
+/** Human label of a dotted path (old or new schema): the deepest label found, else the path itself. */
+export function pathLabel(root: Schema, text: (id?: string) => string, path: string): string {
+  const p = path
+    .replace(/^\/content\/?/, '')
+    .split(/[./]/)
+    .filter(Boolean);
+  let n: Node | undefined = root;
+  let label = '';
+  for (const k of p) {
+    n = n && resolve(root, n);
+    n = /^\d+$/.test(k) ? n?.items : n?.properties?.[k];
+    if (n) label = text(resolve(root, n)['x-ui']?.label_msg) || label;
+  }
+  return label || p.join('.');
+}
