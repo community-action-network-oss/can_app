@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaListener } from 'react-native-safe-area-context';
 import { Uniwind } from 'uniwind';
 
+import { AppShell } from '../src/components/civic';
 import { GluestackUIProvider } from '../src/components/ui/gluestack-ui-provider';
 import { I18nProvider } from '../src/i18n';
 import '../global.css';
@@ -17,7 +18,9 @@ export default function RootLayout() {
         <GluestackUIProvider mode="system">
           <QueryClientProvider client={client}>
             <I18nProvider>
-              <Stack screenOptions={{ headerShown: false }} />
+              <AppShell>
+                <Stack screenOptions={{ headerShown: false }} />
+              </AppShell>
             </I18nProvider>
           </QueryClientProvider>
         </GluestackUIProvider>

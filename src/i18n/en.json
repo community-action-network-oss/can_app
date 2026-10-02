@@ -105,5 +105,16 @@
   "common.validation.tooLong": "That is {count, number} characters. The most is {max, number}.",
   "common.field.needed": "needed",
   "common.field.counter": "{count, number} / {max, number} characters",
-  "common.submitting": "Sending"
+  "common.submitting": "Sending",
+  "nav.label": "Main",
+  "nav.skip": "Skip to main content",
+  "nav.discover": "Discover",
+  "nav.report": "Report",
+  "nav.me": "My activity",
+  "nav.policy": "Policy",
+  "nav.review": "Review",
+  "emergency.notice": "If someone is in danger, contact your local emergency number.",
+  "auth.signIn": "Sign in",
+  "auth.signUp": "Create an account",
+  "auth.welcome": "Welcome"
 }

@@ -8,6 +8,7 @@ export type TextVariant = 'body' | 'bodyStrong' | 'label' | 'caption';
 type Props = Omit<TextProps, 'style'> & {
   variant?: TextVariant;
   muted?: boolean;
+  underline?: boolean;
   children: ReactNode;
 };
 
@@ -18,11 +19,11 @@ const cls = {
   caption: 'text-caption',
 } as const;
 
-export function CivicText({ variant = 'body', muted = false, ...rest }: Props) {
+export function CivicText({ variant = 'body', muted = false, underline = false, ...rest }: Props) {
   return (
     <Text
       {...rest}
-      className={`${cls[variant]} ${muted ? 'text-can-text-muted' : 'text-can-text'}`}
+      className={`${cls[variant]} ${muted ? 'text-can-text-muted' : 'text-can-text'}${underline ? ' underline' : ''}`}
     />
   );
 }
