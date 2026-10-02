@@ -35,8 +35,8 @@
       --can-status-closed-bg: #E1E5E7;
       --can-status-redirected-fg: #3B4A8A;
       --can-status-redirected-bg: #E6E9F7;
-      --can-status-interim-fg: #5A4A1E;
-      --can-status-interim-bg: #F3EFD9;
+      --can-status-transitional-fg: #5A4A1E;
+      --can-status-transitional-bg: #F3EFD9;
       --background: #FAFAF7;
       --foreground: #1D2428;
       --card: #FFFFFF;
@@ -89,8 +89,8 @@
       --can-status-closed-bg: #273136;
       --can-status-redirected-fg: #C2CAF2;
       --can-status-redirected-bg: #232B52;
-      --can-status-interim-fg: #E6D8A0;
-      --can-status-interim-bg: #38300F;
+      --can-status-transitional-fg: #E6D8A0;
+      --can-status-transitional-bg: #38300F;
       --background: #12181B;
       --foreground: #E9EEF0;
       --card: #1A2226;
@@ -145,8 +145,8 @@
   --color-can-status-closed-bg: var(--can-status-closed-bg);
   --color-can-status-redirected-fg: var(--can-status-redirected-fg);
   --color-can-status-redirected-bg: var(--can-status-redirected-bg);
-  --color-can-status-interim-fg: var(--can-status-interim-fg);
-  --color-can-status-interim-bg: var(--can-status-interim-bg);
+  --color-can-status-transitional-fg: var(--can-status-transitional-fg);
+  --color-can-status-transitional-bg: var(--can-status-transitional-bg);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
