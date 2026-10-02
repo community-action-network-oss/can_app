@@ -2,7 +2,7 @@ const preset = require('jest-expo/jest-preset');
 
 module.exports = {
   preset: 'jest-expo',
-  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/e2e/'],
   // react-intl and @formatjs/* ship ESM only; let babel transform them too.
   transformIgnorePatterns: preset.transformIgnorePatterns.map((p) =>
     p.replace(

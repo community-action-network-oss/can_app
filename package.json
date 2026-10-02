@@ -35,6 +35,8 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "29.5.14",
     "@types/react": "~19.2.2",
@@ -57,6 +59,9 @@
     "lint": "expo lint",
     "format": "prettier --write .",
     "test": "jest --ci",
+    "e2e": "node scripts/e2e-prepare.mjs && playwright test",
+    "e2e:prepare": "node scripts/e2e-prepare.mjs",
+    "e2e:install": "playwright install chromium",
     "sync:tokens": "node scripts/sync-tokens.mjs",
     "gen:api": "npx --yes -p typescript@5 -p openapi-typescript@7.13.0 openapi-typescript ../can_server/openapi/openapi.json -o src/api/schema.d.ts",
     "check:logical": "node scripts/check-logical.mjs",
