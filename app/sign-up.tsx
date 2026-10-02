@@ -1,11 +1,3 @@
-import { CivicHeading, Screen } from '../src/components/civic';
-import { useT } from '../src/i18n';
+import { SignUpScreen } from '../src/auth/SignUpScreen';
 
-export default function SignUpRoute() {
-  const t = useT();
-  return (
-    <Screen>
-      <CivicHeading level={1}>{t('auth.signUp')}</CivicHeading>
-    </Screen>
-  );
-}
+export default SignUpScreen;

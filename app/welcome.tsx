@@ -1,11 +1,10 @@
-import { CivicHeading, Screen } from '../src/components/civic';
-import { useT } from '../src/i18n';
+import { WelcomeScreen } from '../src/auth/WelcomeScreen';
+import { RequireAuth } from '../src/session/RequireAuth';
 
 export default function WelcomeRoute() {
-  const t = useT();
   return (
-    <Screen>
-      <CivicHeading level={1}>{t('auth.welcome')}</CivicHeading>
-    </Screen>
+    <RequireAuth>
+      <WelcomeScreen />
+    </RequireAuth>
   );
 }

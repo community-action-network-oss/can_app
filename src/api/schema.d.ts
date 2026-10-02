@@ -286,14 +286,25 @@ export interface components {
             affected?: string;
             coarseArea?: string;
             condition?: string;
+            /** @description Answers to the pinned content schema. Checked against the version stamped on the draft. */
+            content?: {
+                [key: string]: unknown;
+            };
             desiredOutcome?: string;
             jurisdictionId?: string;
             observed?: string;
+            /** @description Hash of that schema version; a mismatch returns schema_hash_mismatch with reload: true. */
+            schemaHash?: string;
+            /** @description Schema version the form was built from; defaults to the active one on create. */
+            schemaVersion?: string;
             title?: string;
             uncertain?: string;
         };
         DraftDto: {
             id: string;
+            schemaHash: string | null;
+            schemaId: string | null;
+            schemaVersion: string | null;
             state: string;
             updatedAt: string;
             version: number;
@@ -450,11 +461,19 @@ export interface components {
             affected?: string;
             coarseArea?: string;
             condition?: string;
+            /** @description Answers to the pinned content schema. Checked against the version stamped on the draft. */
+            content?: {
+                [key: string]: unknown;
+            };
             desiredOutcome?: string;
             /** @description The version you last saw; a mismatch returns 409. */
             expectedVersion: number;
             jurisdictionId?: string;
             observed?: string;
+            /** @description Hash of that schema version; a mismatch returns schema_hash_mismatch with reload: true. */
+            schemaHash?: string;
+            /** @description Schema version the form was built from; defaults to the active one on create. */
+            schemaVersion?: string;
             title?: string;
             uncertain?: string;
         };
