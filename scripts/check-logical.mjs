@@ -8,6 +8,8 @@ const bad = [];
 const walk = (dir) => {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
+    // Excluded: gluestack CLI output is never hand-edited (single owner), so civic wrappers must stay logical.
+    if (p === join('src', 'components', 'ui')) continue;
     if (statSync(p).isDirectory()) walk(p);
     else if (/\.(tsx?|css)$/.test(name) && !name.endsWith('.d.ts')) {
       readFileSync(p, 'utf8')

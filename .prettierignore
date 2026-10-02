@@ -5,3 +5,7 @@ package-lock.json
 src/api/schema.d.ts
 src/theme/tokens.json
 tsconfig.json
+src/components/ui
+src/theme/gluestack.generated.ts
+global.css
+uniwind-types.d.ts

@@ -11,8 +11,9 @@ module.exports = defineConfig([
   },
   {
     // Feature code imports UI only from src/components/civic.
+    // The root layout mounts the gluestack provider, so it is the one other allowed importer.
     files: ['app/**', 'src/**'],
-    ignores: ['src/components/civic/**'],
+    ignores: ['src/components/civic/**', 'app/_layout.tsx'],
     rules: {
       'no-restricted-imports': [
         'error',
