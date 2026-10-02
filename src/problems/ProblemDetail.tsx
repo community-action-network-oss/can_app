@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { ApiError } from '../api/errors';
 import { Box, CivicButton, CivicHeading, CivicText, StatusMessage } from '../components/civic';
 import { useT } from '../i18n';
+import { StageSection } from '../stages/StageSection';
 import { StatusPanel } from './StatusPanel';
 import { Timeline } from './Timeline';
 import { useProblem } from './useProblem';
@@ -89,6 +90,7 @@ export function ProblemDetail({ id }: { id: string }) {
       </CivicText>
       {p.isSeed ? <CivicText variant="caption">{t('detail.seed.explain')}</CivicText> : null}
       <StatusPanel p={p} />
+      <StageSection problemId={id} />
       {p.duplicateOf ? <CivicText>{t('detail.duplicate')}</CivicText> : null}
       <CivicHeading level={2}>{t('detail.about')}</CivicHeading>
       <Block title={t('detail.condition')} body={p.condition} />
