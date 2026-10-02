@@ -31,12 +31,25 @@ const hasReview = () => screen.queryAllByText('Review').length > 0;
 test.each([
   [{ status: 'member', roles: ['auditor'] }, true],
   [{ status: 'member', roles: ['labeler'] }, true],
+  [{ status: 'member', roles: ['steward'] }, true],
+  [{ status: 'member', roles: ['member'] }, false],
   [{ status: 'member', roles: [] }, false],
+  [{ status: 'loading' }, false],
   [{ status: 'guest' }, false],
 ] as [Session, boolean][])('Review area for %j is %s', async (session, shown) => {
   await shell(session);
   expect(hasReview()).toBe(shown);
   expect(screen.getAllByText('Discover').length).toBeGreaterThan(0);
+});
+
+test.each([
+  [['steward'], true],
+  [['moderator'], true],
+  [['member', 'auditor'], false],
+  [undefined, false],
+] as [string[] | undefined, boolean][])('Invites link for %j is %s', async (roles, shown) => {
+  await shell({ status: 'member', roles });
+  expect(screen.queryAllByText('Invites').length > 0).toBe(shown);
 });
 
 test('skip link is the first focusable element', async () => {

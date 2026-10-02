@@ -11,11 +11,15 @@ export const AREAS: Area[] = [
   { href: '/report', label: 'nav.report' },
   { href: '/me', label: 'nav.me' },
   { href: '/policy', label: 'nav.policy' },
-  { href: '/review', label: 'nav.review', roles: ['auditor', 'labeler'] },
+  { href: '/review', label: 'nav.review', roles: ['auditor', 'labeler', 'steward'] },
+  { href: '/review/invites', label: 'nav.invites', roles: ['steward', 'moderator', 'admin'] },
 ];
 
 export const visibleAreas = (s: Session) =>
   AREAS.filter((a) => !a.roles || a.roles.some((r) => s.roles?.includes(r)));
 
 export const isActive = (href: string, path: string) =>
-  href === '/' ? path === '/' : path === href || path.startsWith(`${href}/`);
+  href === '/'
+    ? path === '/'
+    : path === href ||
+      (path.startsWith(`${href}/`) && !(href === '/review' && path === '/review/invites'));

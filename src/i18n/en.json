@@ -118,6 +118,7 @@
   "policy.new.protectedCore.title": "This change cannot be proposed here",
   "policy.new.protectedCore.body": "Protected rules change only through a constitutional amendment. Your answers are kept.",
   "nav.review": "Review",
+  "nav.invites": "Invites",
   "emergency.notice": "If someone is in danger, contact your local emergency number.",
   "auth.signIn": "Sign in",
   "auth.signUp": "Create an account",

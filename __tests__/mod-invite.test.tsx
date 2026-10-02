@@ -84,6 +84,13 @@ describe('steward invite screen', () => {
     mockRoles = ['moderator'];
   });
 
+  it('the steward role from /v1/me/roles may issue too', async () => {
+    mockRoles = ['member', 'steward'];
+    await setup();
+    expect(await screen.findByLabelText('Create code')).toBeTruthy();
+    mockRoles = ['moderator'];
+  });
+
   it('shows the code once: not in the query or mutation cache, gone after Done', async () => {
     const { qc } = await setup();
     await issue();

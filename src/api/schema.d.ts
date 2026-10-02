@@ -314,6 +314,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/legal/corpora": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Legal corpus versions and hashes (no text) */
+        get: operations["listLegalCorpora"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me": {
         parameters: {
             query?: never;
@@ -374,6 +391,23 @@ export interface paths {
         };
         /** Which parts of your problem are ready (facts, sources, criteria, stages), with the reason and the check flags per part */
         get: operations["getMyProblemPreparation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your active human roles (auditor, labeler, lane_member, steward) */
+        get: operations["getMyRoles"];
         put?: never;
         post?: never;
         delete?: never;
@@ -911,6 +945,22 @@ export interface components {
         KeepFlagsDto: {
             flagIds: string[];
         };
+        LegalCorporaDto: {
+            corpora: components["schemas"]["LegalCorpusVersionDto"][];
+        };
+        LegalCorpusVersionDto: {
+            /** Format: date-time */
+            activated_at: string | null;
+            corpus_id: string;
+            /** @description pack hash (D-83) */
+            hash: string;
+            jurisdiction: string;
+            /** @enum {string} */
+            layer: "L1" | "L2" | "L3" | "L4" | "L5" | "L6";
+            /** @enum {string} */
+            state: "shadow" | "canary" | "active" | "retired";
+            version: string;
+        };
         ListCriteriaDto: {
             /** @enum {string} */
             order: "published_at_desc";
@@ -981,6 +1031,9 @@ export interface components {
         MyProblemPageDto: {
             items: components["schemas"]["MyProblemDto"][];
             nextCursor: string | null;
+        };
+        MyRolesDto: {
+            roles: ("auditor" | "labeler" | "lane_member" | "steward")[];
         };
         PendingProposalDto: {
             /** @description Handle of the account that proposed it. */
@@ -2847,6 +2900,25 @@ export interface operations {
             };
         };
     };
+    listLegalCorpora: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LegalCorporaDto"];
+                };
+            };
+        };
+    };
     getMe: {
         parameters: {
             query?: never;
@@ -3055,6 +3127,73 @@ export interface operations {
                 };
             };
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    getMyRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyRolesDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

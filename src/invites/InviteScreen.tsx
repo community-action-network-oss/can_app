@@ -15,7 +15,7 @@ import {
 import { useT, type MessageId } from '../i18n';
 import { useSession } from '../navigation/SessionContext';
 
-const STEWARD_ROLES = ['moderator', 'admin'];
+const STEWARD_ROLES = ['moderator', 'admin', 'steward'];
 const DEFAULT_DAYS = '14';
 type Issued = { code: string; expiresAt: string };
 

@@ -7,6 +7,7 @@ import { unwrap } from '../api/unwrap';
 import { SessionContext, type Session } from '../navigation/SessionContext';
 
 export const ME_KEY = ['me'] as const;
+export const ROLES_KEY = 'my-roles';
 
 type Actions = { refresh: () => Promise<void>; clear: () => Promise<void> };
 const ActionsContext = createContext<Actions>({
@@ -30,12 +31,23 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
   const me = useQuery({ queryKey: ME_KEY, queryFn: loadMe, staleTime: Infinity });
 
+  // Additive roles (auditor, labeler, steward...). Keyed by handle so a new sign-in refetches; removed on sign-out.
+  // Pending or failed: the base role alone applies, so no extra link shows early.
+  const extra = useQuery({
+    queryKey: [ROLES_KEY, me.data?.handle],
+    enabled: !!me.data,
+    queryFn: () => unwrap(api.GET('/v1/me/roles')),
+    staleTime: Infinity,
+    retry: false,
+  }).data?.roles;
+
   const session = useMemo<Session>(() => {
     if (me.isPending) return { status: 'loading' };
     // Offline or server error on boot: show the guest frame; nothing member-only is exposed.
     if (!me.data) return { status: 'guest' };
-    return { status: 'member', handle: me.data.handle, roles: [me.data.role] };
-  }, [me.isPending, me.data]);
+    const roles = [me.data.role, ...(Array.isArray(extra) ? extra : [])];
+    return { status: 'member', handle: me.data.handle, roles: [...new Set<string>(roles)] };
+  }, [me.isPending, me.data, extra]);
 
   const refresh = useCallback(() => qc.invalidateQueries({ queryKey: ME_KEY }), [qc]);
 
