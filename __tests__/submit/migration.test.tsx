@@ -50,6 +50,7 @@ const stamp = (v: string) => ({ schema_id: 'problem', schema_version: v, schema_
 const major = (over: Partial<Plan> = {}): Plan => ({
   bump: 'major',
   state: 'pinned',
+  version: 1,
   current: stamp('1.0.0'),
   target: stamp('2.0.0'),
   grace_ends_at: '2999-01-01T00:00:00Z',

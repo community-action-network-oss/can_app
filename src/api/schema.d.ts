@@ -130,7 +130,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Read your own draft with its version and answers */
+        get: operations["getDraft"];
         put?: never;
         post?: never;
         /** Discard your draft (T19) */
@@ -306,6 +307,75 @@ export interface paths {
         get: operations["listMyProblems"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/policy-proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Policy proposals, newest first, optionally by stage */
+        get: operations["listPolicyProposals"];
+        put?: never;
+        /** Submit a policy proposal; protected-core changes are refused with 422 protected_core */
+        post: operations["submitPolicyProposal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/policy-proposals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One policy proposal with eval, replay, ratification and rollout */
+        get: operations["getPolicyProposal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/policy-proposals/{id}/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Maintainers attach CI eval and replay reports; a blocked verdict moves the stage back */
+        post: operations["attachPolicyProposalReports"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/policy-proposals/{id}/stage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Maintainers move a proposal along legal stage transitions */
+        post: operations["movePolicyProposalStage"];
         delete?: never;
         options?: never;
         head?: never;
@@ -500,6 +570,18 @@ export interface components {
             state: string;
             version: number;
         };
+        AttachReportsDto: {
+            /** @description can_policy tools/eval.mjs --json output. */
+            eval?: {
+                [key: string]: unknown;
+            };
+            /** @description The can_policy pull request. */
+            prUrl?: string;
+            /** @description can_policy replay report (replay-report.schema.json). */
+            replay?: {
+                [key: string]: unknown;
+            };
+        };
         CheckFlagDto: {
             /** @description End offset, exclusive. */
             end: number;
@@ -578,6 +660,10 @@ export interface components {
             uncertain?: string;
         };
         DraftDto: {
+            /** @description The structured answers. Only returned when reading one draft. */
+            content?: {
+                [key: string]: unknown;
+            } | null;
             id: string;
             schemaHash: string | null;
             schemaId: string | null;
@@ -598,6 +684,12 @@ export interface components {
         };
         ErrorResponseDto: {
             error: components["schemas"]["ErrorBodyDto"];
+        };
+        EvalRowDto: {
+            /** @description Key: <decision point>.<metric>. */
+            name: string;
+            /** @enum {string} */
+            status: "passed" | "did_not_pass";
         };
         FinalCriterionDto: {
             deadline: string | null;
@@ -671,11 +763,19 @@ export interface components {
              */
             state: "pinned" | "migrated";
             target: components["schemas"]["MigrationStampDto"];
+            /** @description The draft version after this call. Send it as expectedVersion to confirm. */
+            version: number;
         };
         MigrationStampDto: {
             schema_hash: string;
             schema_id: string;
             schema_version: string;
+        };
+        MoveStageDto: {
+            /** @description Short public reason. */
+            reason?: string;
+            /** @enum {string} */
+            to: "submitted" | "eval" | "replay" | "ratification" | "shadow" | "canary" | "full" | "rejected" | "withdrawn";
         };
         MyProblemDto: {
             appealableUntil: string | null;
@@ -690,6 +790,8 @@ export interface components {
             state: string;
             title: string | null;
             updatedAt: string;
+            /** @description Send this as expectedVersion when editing. */
+            version: number;
         };
         MyProblemPageDto: {
             items: components["schemas"]["MyProblemDto"][];
@@ -699,6 +801,47 @@ export interface components {
             /** @description Handle of the account that proposed it. */
             proposedBy: string;
             to: string;
+        };
+        PolicyProposalDto: {
+            /** @description Why the latest report blocks the proposal, as a key list. */
+            blockedReason: string | null;
+            /** @description The submitted snake_case body. */
+            body: {
+                [key: string]: unknown;
+            };
+            /** @description body.change_summary. */
+            changeSummary: string;
+            /** Format: date-time */
+            createdAt: string;
+            eval: components["schemas"]["EvalRowDto"][] | null;
+            id: string;
+            prUrl: string | null;
+            protectedCoreFlag: boolean;
+            ratification: components["schemas"]["RatificationStateDto"];
+            replay: components["schemas"]["ReplaySummaryDto"] | null;
+            rollout: components["schemas"]["RolloutStageDto"][];
+            schemaVersion: string;
+            /** @enum {string} */
+            stage: "submitted" | "eval" | "replay" | "ratification" | "shadow" | "canary" | "full" | "rejected" | "withdrawn";
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        PolicyProposalPageDto: {
+            items: components["schemas"]["PolicyProposalSummaryDto"][];
+            nextCursor: string | null;
+        };
+        PolicyProposalSummaryDto: {
+            /** @description body.change_summary. */
+            changeSummary: string;
+            /** Format: date-time */
+            createdAt: string;
+            id: string;
+            prUrl: string | null;
+            schemaVersion: string;
+            /** @enum {string} */
+            stage: "submitted" | "eval" | "replay" | "ratification" | "shadow" | "canary" | "full" | "rejected" | "withdrawn";
+            /** Format: date-time */
+            updatedAt: string;
         };
         PreviewDto: {
             explanationIds: string[];
@@ -777,8 +920,29 @@ export interface components {
             items: components["schemas"]["PublicProblemDto"][];
             nextCursor: string | null;
         };
+        RatificationStateDto: {
+            /** @enum {string} */
+            panelStatus: "not_started" | "waiting_for_panel" | "ratified" | "closed";
+            /** @description True while founder stewardship applies. */
+            transitional: boolean;
+        };
+        ReplaySummaryDto: {
+            changed: number;
+            expected: number;
+            morePermissive: number;
+            of: number;
+            stricter: number;
+            unexpected: number;
+            verdict: string;
+        };
         RequestCodeDto: {
             email: string;
+        };
+        RolloutStageDto: {
+            /** Format: date-time */
+            at: string;
+            /** @enum {string} */
+            stage: "shadow" | "canary" | "full";
         };
         RuleDto: {
             enforcement: string;
@@ -914,6 +1078,14 @@ export interface components {
             stageId: string;
             /** @enum {string} */
             status: "pending" | "public" | "hidden" | "withdrawn";
+        };
+        SubmitPolicyProposalDto: {
+            /** @description The policy_proposal content body. */
+            content: {
+                [key: string]: unknown;
+            };
+            schemaHash?: string;
+            schemaVersion?: string;
         };
         TombstoneDto: {
             reason: string | null;
@@ -1372,6 +1544,59 @@ export interface operations {
                 };
             };
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    getDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2190,6 +2415,299 @@ export interface operations {
                 };
             };
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    listPolicyProposals: {
+        parameters: {
+            query?: {
+                stage?: "submitted" | "eval" | "replay" | "ratification" | "shadow" | "canary" | "full" | "rejected" | "withdrawn";
+                cursor?: string;
+                limit?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyProposalPageDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    submitPolicyProposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitPolicyProposalDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyProposalDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    getPolicyProposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyProposalDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    attachPolicyProposalReports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttachReportsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyProposalDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    movePolicyProposalStage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveStageDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyProposalDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
