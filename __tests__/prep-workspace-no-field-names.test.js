@@ -6,7 +6,8 @@ const problem = require('./forms/fixtures/problem.schema.json');
 it('src/preparation names no core problem field', () => {
   const dir = path.join(__dirname, '../src/preparation');
   const src = fs
-    .readdirSync(dir)
+    .readdirSync(dir, { recursive: true })
+    .filter((f) => /\.tsx?$/.test(f))
     .map((f) => fs.readFileSync(path.join(dir, f), 'utf8'))
     .join('\n');
   const core = Object.entries(problem.properties)

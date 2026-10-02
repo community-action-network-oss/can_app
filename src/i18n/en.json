@@ -400,5 +400,15 @@
   "prep.send.confirm": "Send now",
   "prep.send.refused": "It could not be sent yet. See the parts above for what to fix.",
   "prep.notPermitted": "You cannot open this problem here.",
-  "prep.rateLimited": "Too many tries. Please wait a moment and try again."
+  "prep.rateLimited": "Too many tries. Please wait a moment and try again.",
+  "crit.title": "When is this solved",
+  "crit.body": "Write final acceptance criteria. Each one should be something anyone can check.",
+  "crit.example": "Example, synthetic: {text}",
+  "crit.hint.vague": "This is hard to check: {hint}",
+  "crit.count": "{count, plural, =0 {No criteria yet.} one {# criterion} other {# criteria}}",
+  "crit.required": "At least one final criterion is needed.",
+  "crit.hint.title": "A closer look may help",
+  "crit.hint.item": "Item {n, number}.",
+  "crit.hint.fallback": "Say what anyone could count or see.",
+  "crit.saved": "Saved. You can keep editing."
 }

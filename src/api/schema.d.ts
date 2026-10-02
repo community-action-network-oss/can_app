@@ -571,6 +571,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/stages/{id}/block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a blocker on a stage (BLOCKER-1); parallel branches go on */
+        post: operations["blockStage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/stages/{id}/choice": {
         parameters: {
             query?: never;
@@ -623,6 +640,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/stages/{id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start a ready stage (steward); a planned stage gets not_ready */
+        post: operations["startStage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stages/{id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit an active stage for resolution: choice, tasks and mapped evidence are checked and the evidence is frozen */
+        post: operations["submitStage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stages/{id}/unblock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Clear a blocker and resume the stage; on a stuck problem the note goes to the checking run first */
+        post: operations["unblockStage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -639,6 +707,14 @@ export interface components {
             state: string;
             version: number;
         };
+        AllowedStageTransitionDto: {
+            /** @enum {string} */
+            mode: "direct";
+            /** @description Field keys the request must carry. */
+            requires: string[];
+            /** @description The state the stage moves to. */
+            to: string;
+        };
         AttachReportsDto: {
             /** @description can_policy tools/eval.mjs --json output. */
             eval?: {
@@ -650,6 +726,18 @@ export interface components {
             replay?: {
                 [key: string]: unknown;
             };
+        };
+        BlockStageBodyDto: {
+            /** @description Documented attempts, 1 or more. */
+            attempts: string[];
+            blockedActions: string[];
+            blocker: string;
+            /** @description The next lawful route. */
+            nextRoute: string;
+            recheckCondition: string;
+            /** @description The rule, order or fact that blocks. */
+            source: string;
+            sourceVersion: string;
         };
         CheckFlagDto: {
             /** @description End offset, exclusive. */
@@ -1189,6 +1277,8 @@ export interface components {
         };
         StageDto: {
             allowedContributionTypes: string[];
+            /** @description What the viewer may do with this stage now. */
+            allowedStageTransitions: components["schemas"]["AllowedStageTransitionDto"][];
             chip: string;
             choice: components["schemas"]["StageChoiceDto"] | null;
             criteria: components["schemas"]["StageCriterionDto"][];
@@ -1240,6 +1330,8 @@ export interface components {
             stages: components["schemas"]["StageNodeDto"][];
         };
         StageNodeDto: {
+            /** @description What the viewer may do with this stage now. */
+            allowedStageTransitions: components["schemas"]["AllowedStageTransitionDto"][];
             /** @description Chip text for the state. */
             chip: string;
             criteriaTotal: number;
@@ -1280,6 +1372,12 @@ export interface components {
             template: "classic-5" | "one-stage" | null;
             version: number;
         };
+        StageStateChangeDto: {
+            /** @description Chip text for the new state. */
+            chip: string;
+            id: string;
+            state: string;
+        };
         SubmitPolicyProposalDto: {
             /** @description The policy_proposal content body. */
             content: {
@@ -1317,6 +1415,11 @@ export interface components {
             pending: components["schemas"]["PendingProposalDto"] | null;
             state: string;
             version: number;
+        };
+        UnblockStageBodyDto: {
+            clearedNote: string;
+            /** @description https links or evidence ids that show the blocker is gone. */
+            evidence: string[];
         };
         UpdateDraftDto: {
             affected?: string;
@@ -3646,6 +3749,79 @@ export interface operations {
             };
         };
     };
+    blockStage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BlockStageBodyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StageStateChangeDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
     chooseStageOption: {
         parameters: {
             query?: never;
@@ -3875,6 +4051,209 @@ export interface operations {
                 };
             };
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    startStage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StageStateChangeDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    submitStage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StageStateChangeDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    unblockStage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnblockStageBodyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StageStateChangeDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
