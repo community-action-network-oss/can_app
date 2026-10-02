@@ -141,6 +141,109 @@ export interface paths {
         patch: operations["updateDraft"];
         trace?: never;
     };
+    "/v1/drafts/{id}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Which moves you may try on this problem right now */
+        get: operations["getProblemActions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/drafts/{id}/checks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run the privacy and eligibility checks on your problem; flags carry offsets you can highlight */
+        post: operations["runDraftChecks"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/drafts/{id}/checks/keep": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Keep review flags as they are; the review later sees that you kept them, the public never does */
+        post: operations["keepDraftFlags"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/drafts/{id}/migration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What moving this draft to the current form would carry over; minor and patch changes migrate on this call */
+        get: operations["getDraftMigration"];
+        put?: never;
+        /** Move this draft to the current form with the mappings you confirmed */
+        post: operations["confirmDraftMigration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/drafts/{id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Exactly what would be public, and under which handle */
+        get: operations["previewDraft"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/drafts/{id}/transitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Move your problem to another state, or propose a move that a recorded check decides */
+        post: operations["transitionProblem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/jurisdictions": {
         parameters: {
             query?: never;
@@ -264,8 +367,61 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AllowedActionDto: {
+            /** @enum {string} */
+            mode: "direct" | "propose";
+            /** @description Fields this move needs. */
+            requires: string[];
+            to: string;
+        };
+        AllowedActionsDto: {
+            actions: components["schemas"]["AllowedActionDto"][];
+            state: string;
+            version: number;
+        };
+        CheckFlagDto: {
+            /** @description End offset, exclusive. */
+            end: number;
+            /** @description A column name, or a JSON pointer into content or evidence (matches fieldErrors keys). */
+            field: string;
+            /** @description Stable for the same text; pass it to keep. */
+            id: string;
+            kept: boolean;
+            kind: string;
+            ruleId: string;
+            /**
+             * @description hard must be fixed; review may be kept as is.
+             * @enum {string}
+             */
+            severity: "hard" | "review";
+            /** @description Start offset into your text (UTF-16 units). */
+            start: number;
+            suggestion?: string;
+        };
+        CheckResultDto: {
+            /** @description Id of this check run. */
+            checkId: string;
+            /** @description Emergency wording found: flagged, never rejected. */
+            emergency: boolean;
+            flags: components["schemas"]["CheckFlagDto"][];
+            languageLabel: string | null;
+            /** @description True when nothing blocks submitting. */
+            ok: boolean;
+            /** @description Advisory only. */
+            repostMatch: boolean;
+        };
         CodeRequestedDto: {
             message: string;
+        };
+        ConfirmMappingDto: {
+            from_path: string;
+            to_path: string;
+        };
+        ConfirmMigrationDto: {
+            /** @description The version you last saw; a mismatch returns 409. */
+            expectedVersion: number;
+            /** @description The mappings you accept. Copies always apply; unlisted split, merge and drop mappings are skipped. */
+            mappings: components["schemas"]["ConfirmMappingDto"][];
         };
         ContentSchemaDto: {
             /** @description Parsed messages.en.json for this type */
@@ -347,6 +503,9 @@ export interface components {
         JurisdictionListDto: {
             items: components["schemas"]["JurisdictionDto"][];
         };
+        KeepFlagsDto: {
+            flagIds: string[];
+        };
         ListCriteriaDto: {
             /** @enum {string} */
             order: "published_at_desc";
@@ -356,6 +515,39 @@ export interface components {
         MeDto: {
             handle: string;
             role: string;
+        };
+        MigrationMappingDto: {
+            /** @description The answer that would move; null when empty. */
+            carried_value: Record<string, never> | null;
+            from_path: string;
+            needs_confirmation: boolean;
+            /** @description Empty when the transform is drop. */
+            to_path: string;
+            /** @enum {string} */
+            transform: "copy" | "split" | "merge" | "drop";
+        };
+        MigrationPlanDto: {
+            /** @enum {string} */
+            bump: "none" | "patch" | "minor" | "major" | "rollback";
+            current: components["schemas"]["MigrationStampDto"];
+            /** @description Answers that have no place in the new form. */
+            dropped: string[];
+            /** @description Major bumps only: the draft must migrate before submit after this time. */
+            grace_ends_at: string | null;
+            mapping: components["schemas"]["MigrationMappingDto"][];
+            /** @description Newly required fields nothing maps into; asked fresh. */
+            new_required: string[];
+            /**
+             * @description pinned: still on the stamped version; migrated: on the current one.
+             * @enum {string}
+             */
+            state: "pinned" | "migrated";
+            target: components["schemas"]["MigrationStampDto"];
+        };
+        MigrationStampDto: {
+            schema_hash: string;
+            schema_id: string;
+            schema_version: string;
         };
         MyProblemDto: {
             appealableUntil: string | null;
@@ -374,6 +566,23 @@ export interface components {
         MyProblemPageDto: {
             items: components["schemas"]["MyProblemDto"][];
             nextCursor: string | null;
+        };
+        PendingProposalDto: {
+            /** @description Handle of the account that proposed it. */
+            proposedBy: string;
+            to: string;
+        };
+        PreviewDto: {
+            explanationIds: string[];
+            handle: string;
+            /** @description Exactly the public fields, with the same keys and values as the public detail once published. */
+            public: {
+                [key: string]: unknown;
+            };
+            /** @description Deletion and appeal timings that apply, in days. */
+            timings: {
+                [key: string]: unknown;
+            };
         };
         ProblemDetailDto: {
             affected: string | null;
@@ -456,6 +665,30 @@ export interface components {
             /** @enum {boolean} */
             tombstone: true;
             tombstonedAt: string;
+        };
+        TransitionDto: {
+            /**
+             * @description direct (default) applies the move. propose asks for a recorded check to decide it.
+             * @enum {string}
+             */
+            action?: "direct" | "propose";
+            /** @description The version you last saw; a mismatch returns 409. */
+            expectedVersion?: number;
+            /** @description The facts this move needs; missing ones come back as field errors. */
+            fields?: {
+                [key: string]: unknown;
+            };
+            reason?: string;
+            /** @description The state you want the problem to move to. */
+            to: string;
+        };
+        TransitionResultDto: {
+            id: string;
+            label: string;
+            /** @description A proposal waiting for its recorded check, or null. */
+            pending: components["schemas"]["PendingProposalDto"] | null;
+            state: string;
+            version: number;
         };
         UpdateDraftDto: {
             affected?: string;
@@ -997,6 +1230,445 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DraftDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    getProblemActions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AllowedActionsDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    runDraftChecks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckResultDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    keepDraftFlags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KeepFlagsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckResultDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    getDraftMigration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MigrationPlanDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    confirmDraftMigration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmMigrationDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    previewDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreviewDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    transitionProblem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransitionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransitionResultDto"];
                 };
             };
             400: {
