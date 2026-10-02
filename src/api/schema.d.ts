@@ -228,6 +228,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/drafts/{id}/stage-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save the optional stage plan of your draft (a template or your own stages); a cycle or a stage without criteria is refused */
+        put: operations["saveDraftStagePlan"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/drafts/{id}/stage-plan/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check a stage plan without saving it; the editor shows the issues */
+        post: operations["validateDraftStagePlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/drafts/{id}/transitions": {
         parameters: {
             query?: never;
@@ -239,6 +273,24 @@ export interface paths {
         put?: never;
         /** Move your problem to another state, or propose a move that a recorded check decides */
         post: operations["transitionProblem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Invites you issued, without their codes */
+        get: operations["listInvites"];
+        put?: never;
+        /** Issue a one-time invite code (shown once, stored only as a hash) */
+        post: operations["issueInvite"];
         delete?: never;
         options?: never;
         head?: never;
@@ -305,6 +357,23 @@ export interface paths {
         };
         /** Your own problems, newest first, with the exact deletion date */
         get: operations["listMyProblems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/problems/{id}/preparation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Which parts of your problem are ready (facts, sources, criteria, stages), with the reason and the check flags per part */
+        get: operations["getMyProblemPreparation"];
         put?: never;
         post?: never;
         delete?: never;
@@ -650,12 +719,22 @@ export interface components {
                 [key: string]: unknown;
             };
             desiredOutcome?: string;
+            /** @description Final acceptance criteria (statement, how_observed, deadline). A problem cannot leave draft without one (CRITERIA-1). */
+            finalAcceptanceCriteria?: {
+                [key: string]: unknown;
+            }[];
             jurisdictionId?: string;
+            /** @description Say that you have no source yet; the problem is then marked as needing evidence. Empty text clears it. */
+            noSourceNote?: string;
             observed?: string;
             /** @description Hash of that schema version; a mismatch returns schema_hash_mismatch with reload: true. */
             schemaHash?: string;
             /** @description Schema version the form was built from; defaults to the active one on create. */
             schemaVersion?: string;
+            /** @description Trusted sources (uri, category, establishes, authenticity_note). Items are checked against the pinned schema; https only. */
+            sources?: {
+                [key: string]: unknown;
+            }[];
             title?: string;
             uncertain?: string;
         };
@@ -712,6 +791,24 @@ export interface components {
             languages: string[];
             skill_groups: string[];
             topics: string[];
+        };
+        InviteIssuedDto: {
+            /** @description Shown once. Never retrievable again. */
+            code: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        InviteListItemDto: {
+            /** Format: date-time */
+            expiresAt: string;
+            id: string;
+            /** Format: date-time */
+            issuedAt: string;
+            redeemed: boolean;
+        };
+        IssueInviteDto: {
+            /** @default 14 */
+            expiresInDays: number;
         };
         JurisdictionDto: {
             emergencyNotice: string | null;
@@ -802,6 +899,21 @@ export interface components {
             proposedBy: string;
             to: string;
         };
+        PlanCheckDto: {
+            /** @description Content pointers (snake_case) to messages. */
+            fieldErrors: {
+                [key: string]: string;
+            };
+            /** @description The plan issues (code plus the stage involved). */
+            issues: {
+                [key: string]: unknown;
+            }[];
+            ok: boolean;
+            /** @description The stage nodes that were checked. */
+            stages: {
+                [key: string]: unknown;
+            }[];
+        };
         PolicyProposalDto: {
             /** @description Why the latest report blocks the proposal, as a key list. */
             blockedReason: string | null;
@@ -843,6 +955,47 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        PrepFlagDto: {
+            /** @description End offset, exclusive. */
+            end: number;
+            /** @description A column name, or a JSON pointer into content or evidence (matches fieldErrors keys). */
+            field: string;
+            /** @description Stable for the same text; pass it to keep. */
+            id: string;
+            kept: boolean;
+            kind: string;
+            ruleId: string;
+            /**
+             * @description hard must be fixed; review may be kept as is.
+             * @enum {string}
+             */
+            severity: "hard" | "review";
+            /** @description Start offset into your text (UTF-16 units). */
+            start: number;
+            suggestion?: string;
+        };
+        PrepPartDto: {
+            /** @description Content pointers (snake_case) to what needs attention. */
+            fieldErrors: {
+                [key: string]: string;
+            };
+            flags: components["schemas"]["PrepFlagDto"][];
+            /** @description A code: incomplete, missing, invalid, needs_evidence or default_plan. */
+            reason: string | null;
+            /** @enum {string} */
+            status: "ready" | "not_finished";
+        };
+        PreparationDto: {
+            criteria: components["schemas"]["PrepPartDto"];
+            facts: components["schemas"]["PrepPartDto"];
+            id: string;
+            /** @description True when all four parts are ready. */
+            ready: boolean;
+            sources: components["schemas"]["PrepPartDto"];
+            stages: components["schemas"]["PrepPartDto"];
+            state: string;
+            version: number;
+        };
         PreviewDto: {
             explanationIds: string[];
             handle: string;
@@ -863,6 +1016,8 @@ export interface components {
             desiredOutcome: string | null;
             duplicateOf: string | null;
             explanation: string;
+            /** @description What solved means; empty until the problem is published. */
+            finalCriteria: components["schemas"]["PublicCriterionDto"][];
             help_needed: components["schemas"]["HelpNeededDto"];
             id: string;
             investigationNeeded: boolean;
@@ -872,12 +1027,16 @@ export interface components {
             nextAction: string;
             observed: string | null;
             pauseReason: string | null;
+            /** @description The stage plan version, once published. */
+            planVersion: number | null;
             policyVersion: string | null;
             publishedAt: string | null;
             reopened: boolean;
             resumeCondition: string | null;
             /** @description A count only; review content is never public. */
             reviewCount: number;
+            /** @description Cited sources; empty until the problem is published. */
+            sources: components["schemas"]["PublicSourceDto"][];
             state: string;
             syntheticEvidence: boolean;
             title: string | null;
@@ -899,6 +1058,13 @@ export interface components {
             items: components["schemas"]["ProblemEventDto"][];
             nextCursor: string | null;
         };
+        PublicCriterionDto: {
+            deadline: string | null;
+            measure: string;
+            /** @description 1-based position. */
+            ref: number;
+            statement: string;
+        };
         PublicProblemDto: {
             coarseArea: string | null;
             help_needed: components["schemas"]["HelpNeededDto"];
@@ -919,6 +1085,14 @@ export interface components {
             criteria: components["schemas"]["ListCriteriaDto"];
             items: components["schemas"]["PublicProblemDto"][];
             nextCursor: string | null;
+        };
+        PublicSourceDto: {
+            /** @description Category id, for example official_record. */
+            category: string;
+            /** @description Plain label for the category. */
+            categoryLabel: string;
+            establishes: string;
+            uri: string;
         };
         RatificationStateDto: {
             /** @enum {string} */
@@ -953,6 +1127,21 @@ export interface components {
         RulesDto: {
             items: components["schemas"]["RuleDto"][];
             policyVersion: string;
+        };
+        SaveStagePlanDto: {
+            /** @description Extra edges, folded into depends_on of the later stage. */
+            edges?: components["schemas"]["StageEdgeDto"][];
+            /** @description The version you last saw; a mismatch returns 409. */
+            expectedVersion: number;
+            /** @description Stage nodes as in the problem schema stage_plan (name, goal, acceptance_criteria, depends_on, auto_start, ...). No stages and no template means no custom plan. */
+            stages?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * @description Start from a template instead of sending stages.
+             * @enum {string|null}
+             */
+            template?: "classic-5" | "one-stage" | null;
         };
         SignUpDto: {
             ageConfirmed: boolean;
@@ -1021,7 +1210,9 @@ export interface components {
             }[];
         };
         StageEdgeDto: {
+            /** @description Stage name that must be settled first. */
             from: string;
+            /** @description Stage name that starts after it. */
             to: string;
         };
         StageEvidenceDto: {
@@ -1079,6 +1270,16 @@ export interface components {
             /** @enum {string} */
             status: "pending" | "public" | "hidden" | "withdrawn";
         };
+        StagePlanDto: {
+            edges: components["schemas"]["StageEdgeDto"][];
+            id: string;
+            stages: {
+                [key: string]: unknown;
+            }[];
+            /** @enum {string|null} */
+            template: "classic-5" | "one-stage" | null;
+            version: number;
+        };
         SubmitPolicyProposalDto: {
             /** @description The policy_proposal content body. */
             content: {
@@ -1128,14 +1329,37 @@ export interface components {
             desiredOutcome?: string;
             /** @description The version you last saw; a mismatch returns 409. */
             expectedVersion: number;
+            /** @description Final acceptance criteria (statement, how_observed, deadline). A problem cannot leave draft without one (CRITERIA-1). */
+            finalAcceptanceCriteria?: {
+                [key: string]: unknown;
+            }[];
             jurisdictionId?: string;
+            /** @description Say that you have no source yet; the problem is then marked as needing evidence. Empty text clears it. */
+            noSourceNote?: string;
             observed?: string;
             /** @description Hash of that schema version; a mismatch returns schema_hash_mismatch with reload: true. */
             schemaHash?: string;
             /** @description Schema version the form was built from; defaults to the active one on create. */
             schemaVersion?: string;
+            /** @description Trusted sources (uri, category, establishes, authenticity_note). Items are checked against the pinned schema; https only. */
+            sources?: {
+                [key: string]: unknown;
+            }[];
             title?: string;
             uncertain?: string;
+        };
+        ValidateStagePlanDto: {
+            /** @description Extra edges, folded into depends_on of the later stage. */
+            edges?: components["schemas"]["StageEdgeDto"][];
+            /** @description Stage nodes as in the problem schema stage_plan (name, goal, acceptance_criteria, depends_on, auto_start, ...). No stages and no template means no custom plan. */
+            stages?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * @description Start from a template instead of sending stages.
+             * @enum {string|null}
+             */
+            template?: "classic-5" | "one-stage" | null;
         };
         VerifyDto: {
             code: string;
@@ -2128,6 +2352,144 @@ export interface operations {
             };
         };
     };
+    saveDraftStagePlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveStagePlanDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StagePlanDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    validateDraftStagePlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ValidateStagePlanDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanCheckDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
     transitionProblem: {
         parameters: {
             query?: never;
@@ -2184,6 +2546,144 @@ export interface operations {
                 };
             };
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    listInvites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteListItemDto"][];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    issueInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueInviteDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteIssuedDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2407,6 +2907,59 @@ export interface operations {
                 };
             };
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    getMyProblemPreparation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreparationDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
