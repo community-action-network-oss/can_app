@@ -12,3 +12,5 @@ export { FormError } from './FormError';
 export { SubmitButton } from './SubmitButton';
 export { AppShell } from './AppShell';
 export { EmergencyNotice } from './EmergencyNotice';
+export { ChoiceField } from './ChoiceField';
+export { Box } from '../ui/box';

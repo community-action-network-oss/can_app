@@ -1,0 +1,242 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`label stays associated with its control and error in rtl 1`] = `
+<View
+  style={
+    {
+      "direction": "rtl",
+    }
+  }
+>
+  <View
+    className="gap-4"
+    testID="schema-form"
+  >
+    <View
+      className="gap-1"
+    >
+      <Text
+        className="font-body text-base text-can-text"
+      >
+        Section 1 of 1: schema.t.group.g
+      </Text>
+      <Text
+        className="font-body text-base text-can-text"
+      >
+        0 of 1 needed fields answered
+      </Text>
+    </View>
+    <Text
+      aria-level={2}
+      className="font-body text-base text-can-text"
+      role="heading"
+    >
+      schema.t.group.g
+    </Text>
+    <View
+      className="gap-1"
+    >
+      <View
+        className="gap-1"
+      >
+        <Text
+          className="font-body text-base text-can-text"
+        >
+          Fine
+           (needed)
+        </Text>
+        <View
+          className="w-full flex-row items-center rounded-md border dark:bg-input/30 bg-transparent shadow-xs transition-[color,box-shadow] overflow-hidden data-[focus=true]:outline-none data-[focus=true]:border-ring dark:data-[focus=true]:border-ring data-[focus=true]:web:ring-[3px] data-[focus=true]:web:ring-ring/50 data-[invalid=true]:border-destructive/40 dark:data-[invalid=true]:border-destructive/40 data-[invalid=true]:web:ring-destructive/20 dark:data-[invalid=true]:web:ring-destructive/40 data-[disabled=true]:pointer-events-none data-[disabled=true]:cursor-not-allowed data-[disabled=true]:opacity-50 px-3 gap-2 min-h-11 border-can-control-border"
+          data-disabled="false"
+          data-focus="false"
+          data-focus-visible="false"
+          data-hover="false"
+          data-invalid="true"
+          data-readonly="false"
+          data-required="false"
+          dataSet={
+            {
+              "disabled": "false",
+              "focus": "false",
+              "focusVisible": "false",
+              "hover": "false",
+              "invalid": "true",
+              "readonly": "false",
+              "required": "false",
+            }
+          }
+          states={
+            {
+              "disabled": undefined,
+              "focus": false,
+              "focusVisible": false,
+              "hover": undefined,
+              "invalid": true,
+              "readonly": undefined,
+              "required": undefined,
+            }
+          }
+        >
+          <TextInput
+            accessibilityLabel="Fine"
+            accessible={true}
+            aria-invalid={true}
+            aria-label="Fine"
+            aria-selected={false}
+            autoCapitalize="none"
+            autoCorrect={false}
+            className="flex-1 text-foreground text-sm md:text-sm py-1 h-full placeholder:text-muted-foreground web:outline-none ios:leading-[0px] web:cursor-text web:data-[disabled=true]:cursor-not-allowed"
+            data-disabled="false"
+            data-focus="false"
+            data-focus-visible="false"
+            data-hover="false"
+            data-invalid="true"
+            data-readonly="false"
+            data-required="false"
+            dataSet={
+              {
+                "disabled": "false",
+                "focus": "false",
+                "focusVisible": "false",
+                "hover": "false",
+                "invalid": "true",
+                "readonly": "false",
+                "required": "false",
+              }
+            }
+            multiline={false}
+            onBlur={[Function]}
+            onChangeText={[Function]}
+            onFocus={[Function]}
+            onKeyPress={[Function]}
+            readOnly={false}
+            secureTextEntry={false}
+            states={
+              {
+                "disabled": undefined,
+                "focus": false,
+                "focusVisible": false,
+                "hover": undefined,
+                "invalid": true,
+                "readonly": undefined,
+                "required": undefined,
+              }
+            }
+            type="text"
+            value=""
+          />
+        </View>
+        <View
+          accessibilityLiveRegion="assertive"
+          className="flex-row gap-2 items-start"
+          role="alert"
+          testID="field-error"
+        >
+          <Text
+            accessibilityElementsHidden={true}
+            className="font-body text-base text-can-text"
+            testID="field-error-icon"
+          >
+            ⚠
+          </Text>
+          <Text
+            className="font-body text-base text-can-text"
+          >
+            This field is needed
+          </Text>
+        </View>
+      </View>
+    </View>
+    <View
+      className="gap-2"
+    >
+      <View
+        accessibilityLabel="Submit"
+        accessibilityState={
+          {
+            "busy": false,
+            "checked": undefined,
+            "disabled": false,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        className="rounded-md flex-row items-center justify-center data-[focus-visible=true]:web:outline-none data-[focus-visible=true]:web:ring-2 data-[disabled=true]:opacity-40 gap-2 h-fit bg-primary data-[hover=true]:bg-primary/90 data-[active=true]:bg-primary/90 min-h-11 min-w-11 px-4 py-2 border-2 border-primary"
+        collapsable={false}
+        data-active="false"
+        data-disabled="false"
+        data-focus="false"
+        data-focus-visible="false"
+        data-hover="false"
+        dataSet={
+          {
+            "active": "false",
+            "disabled": "false",
+            "focus": "false",
+            "focusVisible": "false",
+            "hover": "false",
+          }
+        }
+        focusable={true}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        role="button"
+        states={
+          {
+            "active": false,
+            "disabled": false,
+            "focus": false,
+            "focusVisible": false,
+            "hover": false,
+          }
+        }
+      >
+        <Text
+          className="web:select-none font-sans text-sm text-label"
+          data-active="false"
+          data-disabled="false"
+          data-focus="false"
+          data-focus-visible="false"
+          data-hover="false"
+          dataSet={
+            {
+              "active": false,
+              "disabled": false,
+              "focus": false,
+              "focusVisible": false,
+              "hover": false,
+            }
+          }
+          states={
+            {
+              "active": false,
+              "disabled": false,
+              "focus": false,
+              "focusVisible": false,
+              "hover": false,
+            }
+          }
+        >
+          Submit
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;
