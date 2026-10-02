@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Platform } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Platform, type TextInput } from 'react-native';
 
 import { api } from '../api/client';
 import { ApiError } from '../api/errors';
@@ -19,6 +19,8 @@ import { useSessionActions } from '../session/SessionProvider';
 import { authCall, rateLimitMinutes } from './call';
 import { clearPending, getPending, setNativeToken } from './pending';
 
+const RESEND_MS = 30_000;
+
 /** Used by sign-up and by sign-in. The address comes from memory (pending.ts), never from the URL. */
 export function CodeEntryScreen() {
   const t = useT();
@@ -29,6 +31,19 @@ export function CodeEntryScreen() {
   const [error, setError] = useState<string>();
   const [info, setInfo] = useState<string>();
   const [busy, setBusy] = useState(false);
+  const input = useRef<TextInput>(null);
+  // Resend unlocks 30s after a code was sent. The ticking text is NOT a live region; the "sent" line is announced once.
+  const [until, setUntil] = useState(() => Date.now() + RESEND_MS);
+  const [now, setNow] = useState(Date.now);
+  const wait = Math.max(0, Math.ceil((until - now) / 1000));
+  useEffect(() => {
+    const id = setInterval(() => {
+      const n = Date.now();
+      setNow(n);
+      if (n >= until) clearInterval(id);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [until]);
 
   if (!pending.email) {
     return (
@@ -76,7 +91,8 @@ export function CodeEntryScreen() {
       await refresh();
       router.replace(first ? '/welcome' : safeReturnTo(returnTo));
     } catch (e) {
-      fail(e); // the typed code stays in the field
+      fail(e); // the typed code stays in the field and keeps focus
+      input.current?.focus();
     } finally {
       setBusy(false);
     }
@@ -87,6 +103,10 @@ export function CodeEntryScreen() {
     try {
       await authCall(api.POST('/v1/auth/code', { body: { email } }));
       setInfo(t('auth.code.resent'));
+      setCode('');
+      setNow(Date.now());
+      setUntil(Date.now() + RESEND_MS);
+      input.current?.focus();
     } catch (e) {
       fail(e);
     }
@@ -97,8 +117,13 @@ export function CodeEntryScreen() {
       <CivicHeading level={1}>{t('auth.code.title')}</CivicHeading>
       <CivicText>{t('auth.code.body')}</CivicText>
       <FormError message={error} />
-      {info ? <CivicText>{info}</CivicText> : null}
+      {info ? (
+        <CivicText accessibilityLiveRegion="polite" role="status">
+          {info}
+        </CivicText>
+      ) : null}
       <TextField
+        ref={input}
         label={t('auth.code.label')}
         accessibilityLabel={t('auth.code.label')}
         value={code}
@@ -120,8 +145,14 @@ export function CodeEntryScreen() {
         variant="secondary"
         label={t('auth.code.resend')}
         accessibilityLabel={t('auth.code.resend')}
+        disabled={wait > 0}
         onPress={() => void resend()}
       />
+      {wait > 0 ? (
+        <CivicText variant="caption" muted>
+          {t('auth.code.resendIn', { seconds: wait })}
+        </CivicText>
+      ) : null}
     </Screen>
   );
 }
