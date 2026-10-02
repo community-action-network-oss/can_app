@@ -145,6 +145,8 @@
   "form.list.remove": "Remove item {n, number}",
   "form.error.url": "Use a web address that starts with https://",
   "form.error.tooShort": "That is {count, number} characters. The least is {min, number}.",
+  "form.error.pattern": "Check the form of this entry. The example above shows it.",
+  "form.error.duplicate": "Each entry can appear only once",
   "form.error.choice": "Pick one of the choices",
   "form.error.unknownWhy": "Say what would help find out",
   "match.title": "Problems you can move",

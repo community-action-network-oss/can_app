@@ -19,6 +19,7 @@ import {
   setPath,
   unsupported,
   validate,
+  withBooleanDefaults,
   type Errors,
   type Schema,
   type Value,
@@ -70,6 +71,15 @@ export function SchemaForm(p: Props) {
     if (f) refs.current.get(f)?.focus();
   });
 
+  // Server errors can name a field in another section: open the first section that has one.
+  const [seenErrors, setSeenErrors] = useState(p.fieldErrors);
+  if (seenErrors !== p.fieldErrors) {
+    setSeenErrors(p.fieldErrors);
+    const first = Object.keys(p.fieldErrors ?? {})[0]?.split('.')[0];
+    const at = sections.findIndex((s) => s.fields.some((f) => f.key === first));
+    if (at >= 0) setIndex(at);
+  }
+
   // Server errors arrive as plain text keyed by path; shown through the same inline slot.
   const shown: Errors = useMemo(() => {
     const out: Errors = { ...errors };
@@ -115,7 +125,7 @@ export function SchemaForm(p: Props) {
       focusNext.current = first;
       return;
     }
-    const { [UNKNOWN_KEY]: _u, ...answers } = value;
+    const { [UNKNOWN_KEY]: _u, ...answers } = withBooleanDefaults(schema, schema, value);
     return p.onSubmit(answers, (unknownMap ?? {}) as Record<string, string>);
   };
 

@@ -13,7 +13,9 @@ import {
 } from '../../components/civic';
 import { useT } from '../../i18n';
 import {
+  GROUPS,
   KNOWN,
+  STRING_LISTS,
   SLOTS,
   UNKNOWN_KEY,
   fieldsOf,
@@ -124,7 +126,7 @@ export function FieldNode({
   );
 
   let control: ReactNode;
-  if (widget === 'group') {
+  if (GROUPS.has(widget)) {
     control = (
       <Box className="gap-4" accessibilityLabel={label}>
         <CivicHeading level={3}>{label}</CivicHeading>
@@ -142,7 +144,8 @@ export function FieldNode({
     return control;
   }
 
-  if (widget === 'list') {
+  if (widget === 'list' || STRING_LISTS.has(widget)) {
+    const stringList = STRING_LISTS.has(widget);
     const items = Array.isArray(v) ? (v as unknown[]) : [];
     const itemNode = node.items ? resolve(ctx.root, node.items) : ({} as Node);
     const max = node.maxItems as number | undefined;
@@ -151,14 +154,20 @@ export function FieldNode({
         {extras}
         {items.map((_, i) => (
           <Box key={i} className="gap-2 border-2 border-can-control-border p-2">
-            {widgetOf(itemNode) === 'group' ? null : (
+            {widgetOf(itemNode) === 'group' || stringList ? null : (
               <CivicText variant="bodyStrong">{t('form.list.item', { n: i + 1 })}</CivicText>
             )}
             <FieldNode
               field={{ key: String(i), node: itemNode, required: true, widget: widgetOf(itemNode) }}
               path={`${path}.${i}`}
               ctx={ctx}
-              label={widgetOf(itemNode) === 'group' ? t('form.list.item', { n: i + 1 }) : label}
+              label={
+                widgetOf(itemNode) === 'group'
+                  ? t('form.list.item', { n: i + 1 })
+                  : stringList
+                    ? `${label}: ${t('form.list.item', { n: i + 1 })}`
+                    : label
+              }
             />
             {ctx.readOnly ? null : (
               <CivicButton

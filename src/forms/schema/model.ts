@@ -51,12 +51,19 @@ export const KNOWN = new Set([
   'toggle',
   'checkbox',
   'list',
+  'rule_id_list',
+  'slug_list',
   'group',
+  'acknowledgement',
   'readonly',
   'hidden',
   'stage_plan',
   'area_picker',
 ]);
+/** Lists of plain strings: same rows as 'list', plus pattern and duplicate checks from the schema. */
+export const STRING_LISTS = new Set(['rule_id_list', 'slug_list']);
+/** Objects rendered as a titled group of checkboxes. */
+export const GROUPS = new Set(['group', 'acknowledgement']);
 export const SLOTS = new Set(['stage_plan', 'area_picker']);
 
 export function widgetOf(n: Node): string {
@@ -135,9 +142,9 @@ export function unsupported(root: Schema, obj: Node = root, prefix = '', req = t
   for (const f of fieldsOf(root, obj)) {
     const path = prefix + f.key;
     if (!KNOWN.has(f.widget)) out.push({ path, widget: f.widget, required: req && f.required });
-    else if (f.widget === 'group')
+    else if (GROUPS.has(f.widget))
       out.push(...unsupported(root, f.node, path + '.', req && f.required));
-    else if (f.widget === 'list') {
+    else if (f.widget === 'list' || STRING_LISTS.has(f.widget)) {
       const item = f.node.items && resolve(root, f.node.items);
       if (item && !KNOWN.has(widgetOf(item)))
         out.push({ path: path + '.[]', widget: widgetOf(item), required: req && f.required });
@@ -169,11 +176,13 @@ export function validate(
       if (!String(unknownMap[path]).trim()) errs[path] = { id: 'form.error.unknownWhy' };
       continue;
     }
-    if (f.widget === 'group') {
+    if (GROUPS.has(f.widget)) {
       Object.assign(errs, validate(root, n, (v as Value) ?? {}, unknownMap, path + '.'));
-    } else if (f.widget === 'list') {
+    } else if (f.widget === 'list' || STRING_LISTS.has(f.widget)) {
       const arr = Array.isArray(v) ? v : [];
       if (f.required && arr.length === 0) errs[path] = { id: 'common.validation.required' };
+      else if (STRING_LISTS.has(f.widget) && new Set(arr).size < arr.length)
+        errs[path] = { id: 'form.error.duplicate' };
       const item = n.items && resolve(root, n.items);
       if (item) {
         arr.forEach((x, i) => {
@@ -208,9 +217,22 @@ export function validate(
         errs[path] = { id: 'common.validation.tooLong', values: { count: v.length, max } };
       else if (f.widget === 'url' && !/^https?:\/\/\S+$/.test(v))
         errs[path] = { id: 'form.error.url' };
+      else if (typeof n.pattern === 'string' && !new RegExp(n.pattern).test(v))
+        errs[path] = { id: 'form.error.pattern' };
     }
   }
   return errs;
+}
+
+/** Required booleans the person never touched are false, so the body carries them (an unticked box is an answer). */
+export function withBooleanDefaults(root: Schema, obj: Node, value: Value): Value {
+  const out: Value = { ...value };
+  for (const f of fieldsOf(root, obj)) {
+    if (f.node.type === 'boolean' && f.required && out[f.key] === undefined) out[f.key] = false;
+    else if (GROUPS.has(f.widget) && f.node.properties)
+      out[f.key] = withBooleanDefaults(root, f.node, (out[f.key] as Value | undefined) ?? {});
+  }
+  return out;
 }
 
 /** Needed top-level fields and how many are answered, for "x of y needed fields answered". */
