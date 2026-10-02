@@ -1,0 +1,51 @@
+# can_app CI. Runs on GitHub once merged; nothing runs it before that.
+# `npm run verify` is the whole gate: tsc, expo lint, prettier --check, the
+# logical-properties check, jest, and a web export (web is the verified
+# target, ADR 0005). No secrets and no network services are needed.
+# Skipped on purpose, because this repo is checked out alone (no superproject):
+#   - `npm run sync:tokens` reads ../../docs/design/ux/tokens.json. verify does
+#     not call it; the synced copies (src/theme/tokens.json and
+#     gluestack.generated.ts) are committed and CI uses them as they are.
+#   - `npm run gen:api` reads ../can_server/openapi/openapi.json. verify does
+#     not call it; CI uses the committed src/api/schema.d.ts.
+#   If either committed copy is stale, run the script locally from the
+#   superproject and commit the result.
+# Not run here: Playwright e2e (not part of verify) and device or EAS builds.
+# A native bundle job (`expo export --platform ios`) is left commented until it
+# has been timed locally at under five minutes (unit 08-u06, D-8).
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      EXPO_NO_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run verify
+  # ios-bundle:
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 24
+  #         cache: npm
+  #     - run: npm ci
+  #     - run: npx expo export --platform ios --output-dir /tmp/ios-bundle
