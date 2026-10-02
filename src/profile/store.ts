@@ -4,6 +4,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
+import { clearNotForMe } from './notForMe';
 import { emptyProfile, fromFile, ProfileSchema, type Profile, toFile } from './model';
 
 const NAME = 'can.profile.v1';
@@ -86,6 +87,7 @@ export async function saveStep(part: Partial<Profile>): Promise<Profile> {
 
 /** Key first, then the store (spec 26 section 7). */
 export async function deleteProfile(): Promise<void> {
+  await clearNotForMe();
   if (web()) {
     await idb((s) => s.delete(NAME), 'readwrite'); // the key
     localStorage.removeItem(NAME); // the ciphertext

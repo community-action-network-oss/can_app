@@ -106,6 +106,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/jurisdictions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Enabled jurisdictions, by name */
+        get: operations["listJurisdictions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me": {
         parameters: {
             query?: never;
@@ -134,6 +151,40 @@ export interface paths {
         put?: never;
         /** Get a new generated handle (once) */
         post: operations["regenerateHandle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/problems": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Public problems, newest first, with help_needed; whole or by coarse region shard */
+        get: operations["listPublicProblems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/problems/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One public problem with help_needed */
+        get: operations["getPublicProblem"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -184,9 +235,52 @@ export interface components {
             /** @enum {string} */
             status: "ok" | "degraded";
         };
+        HelpNeededDto: {
+            coarse_place: string | null;
+            languages: string[];
+            skill_groups: string[];
+            topics: string[];
+        };
+        JurisdictionDto: {
+            emergencyNotice: string | null;
+            id: string;
+            isFictional: boolean;
+            kind: string;
+            name: string;
+        };
+        JurisdictionListDto: {
+            items: components["schemas"]["JurisdictionDto"][];
+        };
+        ListCriteriaDto: {
+            /** @enum {string} */
+            order: "published_at_desc";
+            /** @enum {boolean} */
+            usesEngagementSignals: false;
+        };
         MeDto: {
             handle: string;
             role: string;
+        };
+        PublicProblemDto: {
+            coarseArea: string | null;
+            help_needed: components["schemas"]["HelpNeededDto"];
+            id: string;
+            investigationNeeded: boolean;
+            isSeed: boolean;
+            jurisdiction: string | null;
+            label: string;
+            policyVersion: string | null;
+            publishedAt: string;
+            reopened: boolean;
+            state: string;
+            syntheticEvidence: boolean;
+            title: string;
+            transitional: boolean;
+        };
+        PublicProblemPageDto: {
+            criteria: components["schemas"]["ListCriteriaDto"];
+            items: components["schemas"]["PublicProblemDto"][];
+            nextCursor: string | null;
         };
         RequestCodeDto: {
             email: string;
@@ -568,6 +662,41 @@ export interface operations {
             };
         };
     };
+    listJurisdictions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JurisdictionListDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
     getMe: {
         parameters: {
             query?: never;
@@ -674,6 +803,105 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    listPublicProblems: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: string;
+                /** @description Public coarse region shard id. */
+                region?: string;
+                /** @description Filter by a public state. */
+                state?: string;
+                /** @description Filter by jurisdiction id. */
+                jurisdictionId?: string;
+                /** @description Plain text match on title and condition. */
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicProblemPageDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    getPublicProblem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicProblemDto"];
                 };
             };
             404: {

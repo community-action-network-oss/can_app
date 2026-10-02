@@ -19,6 +19,11 @@ export default function Home() {
       <CivicHeading level={1}>{t('common.appName')}</CivicHeading>
       <CivicText>{t('home.purpose')}</CivicText>
       <CivicButton
+        label={t('match.title')}
+        accessibilityLabel={t('match.title')}
+        onPress={() => router.push('/match')}
+      />
+      <CivicButton
         variant="secondary"
         label={t('home.profile')}
         accessibilityLabel={t('home.profile')}
