@@ -283,7 +283,11 @@ export function FieldNode({
     );
   }
 
-  if (widget === 'stage_ref' || widget === 'criterion_ref') {
+  if (
+    widget === 'stage_ref' ||
+    widget === 'criterion_ref' ||
+    (widget === 'ref' && ctx.choices.ref)
+  ) {
     return (
       <Box className="gap-1">
         <PickField

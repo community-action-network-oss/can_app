@@ -64,11 +64,12 @@ export const KNOWN = new Set([
   'stage_ref',
   'criterion_ref',
   'cost_estimate',
+  'legal_gate',
 ]);
 /** Lists of plain strings: same rows as 'list', plus pattern and duplicate checks from the schema. */
 export const STRING_LISTS = new Set(['rule_id_list', 'slug_list']);
 /** Objects rendered as a titled group of checkboxes. */
-export const GROUPS = new Set(['group', 'acknowledgement', 'cost_estimate']);
+export const GROUPS = new Set(['group', 'acknowledgement', 'cost_estimate', 'legal_gate']);
 export const SLOTS = new Set(['stage_plan', 'area_picker']);
 
 export function widgetOf(n: Node): string {
