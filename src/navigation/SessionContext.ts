@@ -3,6 +3,8 @@ import { createContext, useContext } from 'react';
 export type Session = {
   status: 'loading' | 'guest' | 'member';
   roles?: string[];
+  /** Volunteer review opt-in (an account flag, not a role). */
+  reviewOptIn?: boolean;
   handle?: string;
 };
 

@@ -5,6 +5,7 @@ import { api } from '../api/client';
 import { ApiError } from '../api/errors';
 import { unwrap } from '../api/unwrap';
 import { SessionContext, type Session } from '../navigation/SessionContext';
+import { loadReviewOptIn, reviewOptInKey } from '../review/queue/optIn';
 
 export const ME_KEY = ['me'] as const;
 export const ROLES_KEY = 'my-roles';
@@ -41,13 +42,27 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     retry: false,
   }).data?.roles;
 
+  // Volunteer review opt-in is its own account flag. Same shape as roles: pending or failed means not opted in.
+  const reviewOptIn = useQuery({
+    queryKey: reviewOptInKey(me.data?.handle),
+    enabled: !!me.data,
+    queryFn: loadReviewOptIn,
+    staleTime: Infinity,
+    retry: false,
+  }).data?.optedIn;
+
   const session = useMemo<Session>(() => {
     if (me.isPending) return { status: 'loading' };
     // Offline or server error on boot: show the guest frame; nothing member-only is exposed.
     if (!me.data) return { status: 'guest' };
     const roles = [me.data.role, ...(Array.isArray(extra) ? extra : [])];
-    return { status: 'member', handle: me.data.handle, roles: [...new Set<string>(roles)] };
-  }, [me.isPending, me.data, extra]);
+    return {
+      status: 'member',
+      handle: me.data.handle,
+      roles: [...new Set<string>(roles)],
+      reviewOptIn: reviewOptIn === true,
+    };
+  }, [me.isPending, me.data, extra, reviewOptIn]);
 
   const refresh = useCallback(() => qc.invalidateQueries({ queryKey: ME_KEY }), [qc]);
 

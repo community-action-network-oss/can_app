@@ -69,3 +69,32 @@ test('signed out never fetches roles', async () => {
   await waitFor(() => expect(screen.getByText('guest:')).toBeTruthy());
   expect(paths).not.toContain('/v1/me/roles');
 });
+
+test('reviewOptIn comes from /v1/me/review-opt-in and is false while it loads', async () => {
+  globalThis.fetch = jest.fn(async (req: Request) => {
+    const p = new URL(req.url).pathname;
+    if (p === '/v1/me/review-opt-in') return json(200, { optedIn: true, since: 'x' });
+    return p === '/v1/me/roles' ? json(200, { roles: [] }) : member();
+  }) as never;
+  const { visibleAreas } = require('../src/navigation/areas');
+  function Nav() {
+    const s = useSession();
+    return (
+      <Text>
+        {visibleAreas(s)
+          .map((a: { href: string }) => a.href)
+          .join(' ')}
+      </Text>
+    );
+  }
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } });
+  await render(
+    <QueryClientProvider client={qc}>
+      <SessionProvider>
+        <Nav />
+      </SessionProvider>
+    </QueryClientProvider>,
+  );
+  await waitFor(() => expect(screen.getByText(/\/review\/problems/)).toBeTruthy());
+  expect(screen.queryByText(/\/review\/invites$/)).toBeTruthy();
+});
