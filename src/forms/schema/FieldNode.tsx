@@ -12,6 +12,7 @@ import {
   TextField,
 } from '../../components/civic';
 import { useT } from '../../i18n';
+import { LegalGateView } from './LegalGate';
 import {
   GROUPS,
   KNOWN,
@@ -22,6 +23,7 @@ import {
   getPath,
   msg,
   resolve,
+  serverSet,
   widgetOf,
   type Errors,
   type Field,
@@ -150,6 +152,17 @@ export function FieldNode({
   const allowUnknown = !!node['x-checks']?.allow_unknown && !node.enum?.includes('unknown');
 
   if (widget === 'hidden') return null;
+
+  // Server-set fields are never editable: nothing without a host value, a read-only view with one.
+  if (serverSet(node)) {
+    if (v == null) return null;
+    if (widget === 'legal_gate') return <LegalGateView label={label} value={v} />;
+    return (
+      <FormField label={label} hint={help}>
+        <CivicText testID={`readonly-${path}`}>{typeof v === 'string' ? v : ''}</CivicText>
+      </FormField>
+    );
+  }
 
   if (!KNOWN.has(widget)) {
     return (

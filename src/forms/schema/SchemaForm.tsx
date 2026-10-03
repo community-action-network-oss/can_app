@@ -16,6 +16,7 @@ import {
   msg,
   progress,
   sectionsOf,
+  stripServerSet,
   setPath,
   unsupported,
   validate,
@@ -59,7 +60,7 @@ const NO_SET: ReadonlySet<string> = new Set();
 export function SchemaForm(p: Props) {
   const t = useT();
   const { schema, messages, value, onChange } = p;
-  const sections = useMemo(() => sectionsOf(schema), [schema]);
+  const sections = useMemo(() => sectionsOf(schema, value), [schema, value]);
   const bad = useMemo(() => unsupported(schema), [schema]);
   const [index, setIndex] = useState(0);
   const [errors, setErrors] = useState<Errors>({});
@@ -132,7 +133,11 @@ export function SchemaForm(p: Props) {
       focusNext.current = first;
       return;
     }
-    const { [UNKNOWN_KEY]: _u, ...answers } = withBooleanDefaults(schema, schema, value);
+    const { [UNKNOWN_KEY]: _u, ...answers } = withBooleanDefaults(
+      schema,
+      schema,
+      stripServerSet(schema, schema, value),
+    );
     return p.onSubmit(answers, (unknownMap ?? {}) as Record<string, string>);
   };
 

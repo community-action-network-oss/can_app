@@ -25,7 +25,8 @@ export type Node = {
     max_chars?: number;
     [k: string]: unknown;
   };
-  'x-checks'?: { allow_unknown?: boolean; [k: string]: unknown };
+  readOnly?: boolean;
+  'x-checks'?: { allow_unknown?: boolean; server_set?: boolean; [k: string]: unknown };
   [k: string]: unknown;
 };
 export type Schema = Node & { id?: string; version?: string; $defs?: Record<string, Node> };
@@ -83,6 +84,9 @@ export function widgetOf(n: Node): string {
   return 'text';
 }
 
+/** Set by the server (readOnly or x-checks.server_set): never editable, never submitted. */
+export const serverSet = (n: Node) => n.readOnly === true || n['x-checks']?.server_set === true;
+
 export type Field = { key: string; node: Node; required: boolean; widget: string };
 
 /** Fields of an object node, ordered by x-ui.order (unordered last, stable). Hidden ones are included; callers skip them. */
@@ -95,10 +99,10 @@ export function fieldsOf(root: Schema, obj: Node): Field[] {
 }
 
 export type Section = { id: string; fields: Field[] };
-export function sectionsOf(root: Schema): Section[] {
+export function sectionsOf(root: Schema, value: Value = {}): Section[] {
   const out: Section[] = [];
   for (const f of fieldsOf(root, root)) {
-    if (f.widget === 'hidden') continue;
+    if (f.widget === 'hidden' || (serverSet(f.node) && value[f.key] == null)) continue;
     const id = f.node['x-ui']?.group ?? '';
     let s = out.find((x) => x.id === id);
     if (!s) out.push((s = { id, fields: [] }));
@@ -147,6 +151,7 @@ export function unsupported(root: Schema, obj: Node = root, prefix = '', req = t
   const out: { path: string; widget: string; required: boolean }[] = [];
   for (const f of fieldsOf(root, obj)) {
     const path = prefix + f.key;
+    if (serverSet(f.node)) continue;
     if (!KNOWN.has(f.widget)) out.push({ path, widget: f.widget, required: req && f.required });
     else if (GROUPS.has(f.widget))
       out.push(...unsupported(root, f.node, path + '.', req && f.required));
@@ -176,7 +181,7 @@ export function validate(
     const path = prefix + f.key;
     const v = value?.[f.key];
     const n = f.node;
-    if (NON_INPUT.has(f.widget) || !KNOWN.has(f.widget)) continue;
+    if (NON_INPUT.has(f.widget) || !KNOWN.has(f.widget) || serverSet(n)) continue;
     const allowUnknown = n['x-checks']?.allow_unknown && !n.enum?.includes('unknown');
     if (allowUnknown && unknownMap?.[path] !== undefined) {
       if (!String(unknownMap[path]).trim()) errs[path] = { id: 'form.error.unknownWhy' };
@@ -230,10 +235,27 @@ export function validate(
   return errs;
 }
 
+/** Drops server-set fields (at any depth) from a body: the server computes them and ignores client values. */
+export function stripServerSet(root: Schema, obj: Node, value: Value): Value {
+  const out: Value = { ...value };
+  for (const f of fieldsOf(root, obj)) {
+    const v = out[f.key];
+    if (serverSet(f.node)) delete out[f.key];
+    else if (GROUPS.has(f.widget) && v && typeof v === 'object')
+      out[f.key] = stripServerSet(root, f.node, v as Value);
+    else if (f.widget === 'list' && Array.isArray(v) && f.node.items) {
+      const item = resolve(root, f.node.items);
+      if (item.properties) out[f.key] = v.map((x) => stripServerSet(root, item, x as Value));
+    }
+  }
+  return out;
+}
+
 /** Required booleans the person never touched are false, so the body carries them (an unticked box is an answer). */
 export function withBooleanDefaults(root: Schema, obj: Node, value: Value): Value {
   const out: Value = { ...value };
   for (const f of fieldsOf(root, obj)) {
+    if (serverSet(f.node)) continue;
     if (f.node.type === 'boolean' && f.required && out[f.key] === undefined) out[f.key] = false;
     else if (GROUPS.has(f.widget) && f.node.properties)
       out[f.key] = withBooleanDefaults(root, f.node, (out[f.key] as Value | undefined) ?? {});
@@ -245,7 +267,7 @@ export function withBooleanDefaults(root: Schema, obj: Node, value: Value): Valu
 export function progress(root: Schema, value: Value) {
   const unk = value[UNKNOWN_KEY] as Value | undefined;
   const needed = fieldsOf(root, root).filter(
-    (f) => f.required && !NON_INPUT.has(f.widget) && KNOWN.has(f.widget),
+    (f) => f.required && !NON_INPUT.has(f.widget) && KNOWN.has(f.widget) && !serverSet(f.node),
   );
   return {
     required: needed.length,

@@ -23,7 +23,7 @@ const json = (status: number, body: unknown) =>
 const O1 = '11111111-1111-4111-8111-111111111111';
 const schema = {
   type: 'object',
-  required: ['rationale', 'legal_gate_record'],
+  required: ['rationale'],
   properties: {
     chosen_option_ids: {
       type: 'array',
@@ -33,11 +33,13 @@ const schema = {
     rationale: { type: 'string', 'x-ui': { widget: 'textarea', label_msg: 'l.r', order: 2 } },
     legal_gate_record: {
       type: 'object',
+      readOnly: true,
       required: ['constraint_checked'],
       properties: {
         constraint_checked: { type: 'string', 'x-ui': { widget: 'textarea', label_msg: 'l.c' } },
       },
       'x-ui': { widget: 'legal_gate', label_msg: 'l.g', order: 3 },
+      'x-checks': { server_set: true },
     },
   },
 };
@@ -218,7 +220,6 @@ describe('choice record', () => {
 describe('choice form', () => {
   const fill = async () => {
     await fireEvent.changeText(await screen.findByLabelText(/Why/), 'Cheapest');
-    await fireEvent.changeText(await screen.findByLabelText(/What was checked/), 'Roads act');
   };
 
   it('comes from the schema, picks options from the stage, and posts the answers', async () => {
@@ -228,6 +229,8 @@ describe('choice form', () => {
     await fireEvent.press(await screen.findByText(/Option 1: Weekly pickup/));
     await fireEvent.press(await screen.findByRole('button', { name: 'Record the choice' }));
     expect(await screen.findByText('The choice is recorded.')).toBeTruthy();
+    expect(screen.queryByLabelText(/What was checked/)).toBeNull();
+    expect(posts[0].body.content).not.toHaveProperty('legal_gate_record');
     expect(posts[0]).toMatchObject({
       path: '/v1/stages/s1/choice',
       body: {

@@ -3,15 +3,14 @@ import { router } from 'expo-router';
 import type { components } from '../api/schema';
 import { Box, CivicButton, CivicHeading, CivicText, StatusMessage } from '../components/civic';
 import { useStage } from '../contributions/api';
-import { useT, type MessageId } from '../i18n';
+import { useT } from '../i18n';
 import { useSession } from '../navigation/SessionContext';
+import { LegalFindings } from '../forms/schema/LegalGate';
 import { useStageDecision } from './api';
 import { optionLabel } from './optionLabel';
 
 type Rec = components['schemas']['DecisionRecordDto'];
-type Finding = components['schemas']['LegalFindingDto'];
 
-const KNOWN = ['constrains', 'permits', 'none_found', 'conflict', 'not_applicable', 'unjudged'];
 const words = (s: string) => s.replace(/_/g, ' ');
 
 /** The legal gate record per layer: a plain label, the corpus version and article ids (LEGAL-CITE-1), never article text. */
@@ -23,29 +22,7 @@ function Gate({ gate }: { gate: Rec['legalGate'] }) {
       <CivicText variant="bodyStrong">
         {t(gate.outcome === 'blocked' ? 'choice.gate.blocked' : 'choice.gate.clear')}
       </CivicText>
-      {gate.findings.map((f: Finding) => (
-        <Box key={f.layer} className="gap-1" testID={`gate-${f.layer}`}>
-          <CivicText variant="bodyStrong">{t(`choice.layer.${f.layer}`)}</CivicText>
-          <CivicText>
-            {t(
-              KNOWN.includes(f.finding)
-                ? (`choice.finding.${f.finding}` as MessageId)
-                : 'choice.finding.unknown',
-            )}
-            {f.blocks ? ` (${t('choice.gate.blocksThis')})` : ''}
-          </CivicText>
-          {f.article_ids.length ? (
-            <CivicText variant="caption" muted>
-              {t('choice.gate.articles', { ids: f.article_ids.join(', ') })}
-            </CivicText>
-          ) : null}
-          {f.corpus_version ? (
-            <CivicText variant="caption" muted>
-              {t('choice.gate.corpus', { version: f.corpus_version })}
-            </CivicText>
-          ) : null}
-        </Box>
-      ))}
+      <LegalFindings findings={gate.findings} />
     </Box>
   );
 }
