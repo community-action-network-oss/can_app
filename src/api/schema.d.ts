@@ -796,6 +796,23 @@ export interface paths {
         patch: operations["updateStageOption"];
         trace?: never;
     };
+    "/v1/stage-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The default stage plan templates, with starting wording */
+        get: operations["listStageTemplates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/stages/by-problem/{problemId}": {
         parameters: {
             query?: never;
@@ -824,6 +841,23 @@ export interface paths {
         get: operations["getStage"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stages/{id}/attach-contribution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Steward: attach an accepted evidence contribution (made ahead or at problem level) to an active or blocked stage as stage evidence */
+        post: operations["attachStageContribution"];
         delete?: never;
         options?: never;
         head?: never;
@@ -979,6 +1013,12 @@ export interface components {
             requires: string[];
             /** @description The state the stage moves to. */
             to: string;
+        };
+        AttachContributionBodyDto: {
+            /** Format: uuid */
+            contributionId: string;
+            /** @description 1-based criterion numbers of this stage the links support. */
+            criterionRefs: number[];
         };
         AttachReportsDto: {
             /** @description can_policy tools/eval.mjs --json output. */
@@ -1840,6 +1880,16 @@ export interface components {
             id: string;
             state: string;
         };
+        StageTemplateDto: {
+            finalCriteria: components["schemas"]["TemplateCriterionDto"][];
+            /** @enum {string} */
+            id: "classic-5" | "one-stage";
+            name: string;
+            stages: components["schemas"]["TemplateStageDto"][];
+        };
+        StageTemplateListDto: {
+            items: components["schemas"]["StageTemplateDto"][];
+        };
         SubmitPolicyProposalDto: {
             /** @description The policy_proposal content body. */
             content: {
@@ -1847,6 +1897,21 @@ export interface components {
             };
             schemaHash?: string;
             schemaVersion?: string;
+        };
+        TemplateCriterionDto: {
+            measure: string;
+            statement: string;
+        };
+        TemplateStageDto: {
+            criteria: components["schemas"]["TemplateCriterionDto"][];
+            decisionMethod: string;
+            dependsOn: string[];
+            goal: string;
+            label: string;
+            /** @description Plan slug. */
+            name: string;
+            needsChoice: boolean;
+            required: boolean;
         };
         TombstoneDto: {
             reason: string | null;
@@ -5281,6 +5346,33 @@ export interface operations {
             };
         };
     };
+    listStageTemplates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StageTemplateListDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
     listProblemStages: {
         parameters: {
             query?: never;
@@ -5338,6 +5430,79 @@ export interface operations {
                 };
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    attachStageContribution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttachContributionBodyDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StageEvidenceListDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
