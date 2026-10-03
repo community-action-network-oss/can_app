@@ -899,6 +899,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/stages/{id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The decision records of a stage with the layered legal check, public after publish */
+        get: operations["getStageDecision"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/stages/{id}/evidence": {
         parameters: {
             query?: never;
@@ -1194,6 +1211,24 @@ export interface components {
             /** @enum {string} */
             status: "open";
         };
+        DecisionRecordDto: {
+            authority: string;
+            decidedAt: string;
+            decidedUnder: string | null;
+            /** @description Public handle of the decider. */
+            deciderHandle: string;
+            dissentNotes: string[] | null;
+            id: string;
+            legalGate: components["schemas"]["LegalGateDto"];
+            method: string;
+            policyVersion: string | null;
+            rationale: string;
+            stageChoiceId: string;
+            transitional: boolean;
+            transitionalNote: string | null;
+            /** @description True once the choice was withdrawn. */
+            withdrawn: boolean;
+        };
         DeclareDto: {
             /** @description Must be true: you have no conflict of interest. */
             noConflict: boolean;
@@ -1313,6 +1348,24 @@ export interface components {
             /** @enum {string} */
             state: "shadow" | "canary" | "active" | "retired";
             version: string;
+        };
+        LegalFindingDto: {
+            /** @description Article ids only, never text. */
+            article_ids: string[];
+            blocks: boolean;
+            /** @description `<id>@<semver>[+hash12]`; null only for not_applicable. */
+            corpus_version: string | null;
+            /** @enum {string} */
+            finding: "constrains" | "permits" | "none_found" | "conflict" | "not_applicable";
+            /** @enum {string} */
+            layer: "L1" | "L2" | "L3" | "L4" | "L5" | "L6";
+        };
+        LegalGateDto: {
+            checkedAt: string;
+            findings: components["schemas"]["LegalFindingDto"][];
+            /** @enum {string} */
+            outcome: "clear" | "blocked";
+            packVersion: string;
         };
         ListCriteriaDto: {
             /** @enum {string} */
@@ -1823,6 +1876,15 @@ export interface components {
             ref: number;
             statement: string;
             target: string | null;
+        };
+        StageDecisionDto: {
+            /**
+             * @description Derived from the live decision record only.
+             * @enum {string}
+             */
+            choiceGate: "not_needed" | "recorded" | "missing";
+            items: components["schemas"]["DecisionRecordDto"][];
+            stageId: string;
         };
         StageDto: {
             allowedContributionTypes: string[];
@@ -5761,6 +5823,43 @@ export interface operations {
                 };
             };
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    getStageDecision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StageDecisionDto"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
