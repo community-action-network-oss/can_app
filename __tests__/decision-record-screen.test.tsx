@@ -156,6 +156,29 @@ describe('choice record', () => {
     expect(screen.getByText('No rule found')).toBeTruthy();
   });
 
+  it('labels unjudged and unknown findings in plain words, never a raw code', async () => {
+    const f = { blocks: false, article_ids: [], corpus_version: null };
+    decision = {
+      stageId: 's1',
+      choiceGate: 'recorded',
+      items: [
+        rec({
+          legalGate: {
+            ...gate,
+            findings: [
+              { ...f, layer: 'L4', finding: 'unjudged' },
+              { ...f, layer: 'L6', finding: 'brand_new_code' },
+            ],
+          },
+        }),
+      ],
+    };
+    await wrap(<DecisionRoute />);
+    expect(await screen.findByText('Found a rule that still needs a legal check')).toBeTruthy();
+    expect(screen.getByText('Not checked yet')).toBeTruthy();
+    expect(screen.queryByText(/brand_new_code|choice\.finding/)).toBeNull();
+  });
+
   it('shows an empty state and offers the form only to the poster of an active stage', async () => {
     decision = { stageId: 's1', choiceGate: 'missing', items: [] };
     st = stage();
@@ -216,7 +239,10 @@ describe('choice form', () => {
   });
 
   it.each([
-    ['gate_held', /cannot confirm this option is lawful yet.*Nothing is lost/],
+    [
+      'gate_held',
+      /on hold because a rule needs a legal check first.*Nothing is lost.*come back later/,
+    ],
     ['gate_blocked', /A law blocks this choice\. Nothing was recorded/],
   ])('explains %s in plain words', async (code, re) => {
     postRes = () => json(409, { error: { code, message: 'x' } });
