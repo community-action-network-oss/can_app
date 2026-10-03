@@ -11,6 +11,12 @@ export default function MyRoute() {
       <CivicHeading level={1}>{t('nav.me')}</CivicHeading>
       <CivicButton
         variant="secondary"
+        label={t('me.updates')}
+        accessibilityLabel={t('me.updates')}
+        onPress={() => router.push('/me/notifications' as never)}
+      />
+      <CivicButton
+        variant="secondary"
         label={t('vreview.optin.title')}
         accessibilityLabel={t('vreview.optin.title')}
         onPress={() => router.push('/review/problems' as never)}
