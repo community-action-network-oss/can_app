@@ -39,6 +39,8 @@ type Props = {
   readOnly?: boolean;
   /** Resolved label of the final-section button. Defaults to "Submit". */
   submitLabel?: string;
+  /** Turns the final button off (for example while a reply allowance is used up). Fields stay editable. */
+  submitDisabled?: boolean;
   /** Server field errors keyed by dotted path (ApiError.fieldErrors). */
   fieldErrors?: Record<string, string>;
   formError?: string;
@@ -180,7 +182,7 @@ export function SchemaForm(p: Props) {
           <SubmitButton
             label={p.submitLabel ?? t('form.submit')}
             busy={p.busy}
-            disabled={blocked}
+            disabled={blocked || p.submitDisabled}
             onPress={() => void submit()}
           />
         )}

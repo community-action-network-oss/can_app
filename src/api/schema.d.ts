@@ -106,6 +106,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/contributions/by-problem/{problemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Published contributions of a problem in the order they were made, plus your own awaiting review */
+        get: operations["listContributions"];
+        put?: never;
+        /** Reply to a problem or one of its stages with structured answers; it waits for review */
+        post: operations["createContribution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/contributions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Withdraw your reply, or edit it while it awaits review */
+        patch: operations["updateContribution"];
+        trace?: never;
+    };
     "/v1/drafts": {
         parameters: {
             query?: never;
@@ -408,6 +443,23 @@ export interface paths {
         };
         /** Recommendations on your problem; volunteers are numbered, never named */
         get: operations["listMyProblemRecommendations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/problems/{id}/reply-allowance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** How many replies you have left on this problem in the rolling window (for "2 of 4 replies left today") */
+        get: operations["getMyReplyAllowance"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1011,6 +1063,48 @@ export interface components {
             schema_id: string;
             schema_version: string;
         };
+        ContributionDto: {
+            answersContributionId: string | null;
+            /** @description Handle, or the label of a system actor. */
+            authorHandle: string;
+            /** @description null once withdrawn. */
+            body: {
+                [key: string]: unknown;
+            } | null;
+            createdAt: string;
+            evidenceRefs: components["schemas"]["EvidenceRefDto"][];
+            forLaterStage: boolean;
+            id: string;
+            stageId: string | null;
+            /** @enum {string} */
+            status: "pending_review" | "accepted" | "hidden" | "tombstoned";
+            tombstonedAt: string | null;
+            type: string;
+        };
+        ContributionListDto: {
+            criteria: components["schemas"]["ListCriteriaDto"];
+            items: components["schemas"]["ContributionDto"][];
+        };
+        CreateContributionDto: {
+            /** @description A clarifying question of the same problem this answers. */
+            answersContributionId?: string;
+            /** @description Optional location attestation; failure means guest. */
+            attestation?: {
+                [key: string]: unknown;
+            };
+            /** @description Answers, validated against the pinned content schema. */
+            body: {
+                [key: string]: unknown;
+            };
+            /** @description Ids of review flags the author keeps as they are. */
+            keptFlagIds?: string[];
+            schemaHash?: string;
+            schemaVersion?: string;
+            /** @description The stage this is for; leave out to address the problem. */
+            stageId?: string;
+            /** @enum {string} */
+            type: "clarifying_question" | "observation" | "personal_experience" | "factual_claim" | "evidence" | "interpretation" | "root_cause" | "constraint" | "stakeholder_perspective" | "proposed_solution" | "proposal_improvement" | "risk" | "implementation_offer" | "progress_update" | "verification_evidence";
+        };
         CreateDraftDto: {
             affected?: string;
             coarseArea?: string;
@@ -1085,6 +1179,12 @@ export interface components {
             name: string;
             /** @enum {string} */
             status: "passed" | "did_not_pass";
+        };
+        EvidenceRefDto: {
+            /** @enum {string} */
+            category: "official_page" | "news" | "other";
+            note: string | null;
+            url: string;
         };
         FinalCriterionDto: {
             deadline: string | null;
@@ -1405,6 +1505,8 @@ export interface components {
         };
         ProblemDetailDto: {
             affected: string | null;
+            /** @description Contribution types the signed-in caller may submit on the whole problem now; empty for guests. */
+            allowedContributionTypes: string[];
             authorHandle: string | null;
             coarseArea: string | null;
             condition: string | null;
@@ -1521,6 +1623,12 @@ export interface components {
             stricter: number;
             unexpected: number;
             verdict: string;
+        };
+        ReplyAllowanceDto: {
+            limit: number;
+            remaining: number;
+            /** @description ISO time the next slot frees */
+            resetsAt: string | null;
         };
         RequestCodeDto: {
             email: string;
@@ -1774,6 +1882,15 @@ export interface components {
             clearedNote: string;
             /** @description https links or evidence ids that show the blocker is gone. */
             evidence: string[];
+        };
+        UpdateContributionDto: {
+            /** @description New answers; only while the item is awaiting review. */
+            body?: {
+                [key: string]: unknown;
+            };
+            keptFlagIds?: string[];
+            /** @description true withdraws (tombstones) it. */
+            withdraw?: boolean;
         };
         UpdateDraftDto: {
             affected?: string;
@@ -2183,6 +2300,193 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelopeDto"];
+                };
+            };
+        };
+    };
+    listContributions: {
+        parameters: {
+            query?: {
+                stageId?: string;
+                /** @description true: only contributions to the whole problem. */
+                problemLevel?: string;
+            };
+            header?: never;
+            path: {
+                problemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributionListDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    createContribution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                problemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateContributionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributionDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    updateContribution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateContributionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributionDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
                 };
             };
         };
@@ -3497,6 +3801,51 @@ export interface operations {
                 };
             };
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    getMyReplyAllowance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplyAllowanceDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

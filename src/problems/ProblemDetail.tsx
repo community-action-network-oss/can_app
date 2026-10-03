@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 
 import { ApiError } from '../api/errors';
 import { Box, CivicButton, CivicHeading, CivicText, StatusMessage } from '../components/civic';
+import { ProblemContributions } from '../contributions/ProblemContributions';
 import { useT } from '../i18n';
 import { StageSection } from '../stages/StageSection';
 import { StatusPanel } from './StatusPanel';
@@ -102,6 +103,7 @@ export function ProblemDetail({ id }: { id: string }) {
       {p.reviewCount > 0 ? (
         <CivicText muted>{t('detail.reviewCount', { count: p.reviewCount })}</CivicText>
       ) : null}
+      <ProblemContributions id={id} allowed={p.allowedContributionTypes ?? []} />
       <Timeline id={id} />
     </>
   );
