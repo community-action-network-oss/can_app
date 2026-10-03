@@ -923,7 +923,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Public options of a stage in creation order, with improvements and a comparison */
+        get: operations["listStageOptions"];
         put?: never;
         /** Add an option to a stage; planned and ready stages keep it for later */
         post: operations["addStageOption"];
@@ -1077,6 +1078,15 @@ export interface components {
         };
         CodeRequestedDto: {
             message: string;
+        };
+        ComparisonCellDto: {
+            optionId: string;
+            value: string | null;
+        };
+        ComparisonRowDto: {
+            cells: components["schemas"]["ComparisonCellDto"][];
+            /** @enum {string} */
+            field: "mechanism" | "authority" | "cost" | "risks";
         };
         ConfirmMappingDto: {
             from_path: string;
@@ -1412,6 +1422,43 @@ export interface components {
         OptInDto: {
             optedIn: boolean;
             since: string | null;
+        };
+        OptionComparisonDto: {
+            rows: components["schemas"]["ComparisonRowDto"][];
+        };
+        OptionImprovementDto: {
+            /** @description Public handle only. */
+            authorHandle: string;
+            content: {
+                [key: string]: unknown;
+            };
+            createdAt: string;
+            id: string;
+            /** @description True for the viewer's own item awaiting review. */
+            pendingReview: boolean;
+        };
+        OptionItemDto: {
+            /** @description Public handle only. */
+            authorHandle: string;
+            /** @description Null once withdrawn. */
+            content: {
+                [key: string]: unknown;
+            } | null;
+            createdAt: string;
+            forLaterStage: boolean;
+            id: string;
+            improvements: components["schemas"]["OptionImprovementDto"][];
+            /** @description True for the viewer's own option awaiting review. */
+            pendingReview: boolean;
+            stageId: string;
+            /** @enum {string} */
+            status: "pending" | "public" | "withdrawn";
+        };
+        OptionsOrderDto: {
+            /** @enum {string} */
+            order: "created_at_asc";
+            /** @description Always false (RANK-1). */
+            usesEngagementSignals: boolean;
         };
         PendingProposalDto: {
             /** @description Handle of the account that proposed it. */
@@ -1863,6 +1910,12 @@ export interface components {
             stageId: string;
             /** @enum {string} */
             status: "pending" | "public" | "hidden" | "withdrawn";
+        };
+        StageOptionsDto: {
+            /** @description Server facts from the public options; null under 2 options. */
+            comparison: components["schemas"]["OptionComparisonDto"] | null;
+            criteria: components["schemas"]["OptionsOrderDto"];
+            items: components["schemas"]["OptionItemDto"][];
         };
         StagePlanDto: {
             edges: components["schemas"]["StageEdgeDto"][];
@@ -5773,6 +5826,43 @@ export interface operations {
                 };
             };
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    listStageOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StageOptionsDto"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
