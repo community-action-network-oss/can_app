@@ -59,11 +59,16 @@ export const KNOWN = new Set([
   'hidden',
   'stage_plan',
   'area_picker',
+  'evidence_url',
+  'number',
+  'stage_ref',
+  'criterion_ref',
+  'cost_estimate',
 ]);
 /** Lists of plain strings: same rows as 'list', plus pattern and duplicate checks from the schema. */
 export const STRING_LISTS = new Set(['rule_id_list', 'slug_list']);
 /** Objects rendered as a titled group of checkboxes. */
-export const GROUPS = new Set(['group', 'acknowledgement']);
+export const GROUPS = new Set(['group', 'acknowledgement', 'cost_estimate']);
 export const SLOTS = new Set(['stage_plan', 'area_picker']);
 
 export function widgetOf(n: Node): string {
@@ -215,7 +220,7 @@ export function validate(
         errs[path] = { id: 'form.error.tooShort', values: { count: v.length, min } };
       else if (max && v.length > max)
         errs[path] = { id: 'common.validation.tooLong', values: { count: v.length, max } };
-      else if (f.widget === 'url' && !/^https?:\/\/\S+$/.test(v))
+      else if ((f.widget === 'url' || f.widget === 'evidence_url') && !/^https?:\/\/\S+$/.test(v))
         errs[path] = { id: 'form.error.url' };
       else if (typeof n.pattern === 'string' && !new RegExp(n.pattern).test(v))
         errs[path] = { id: 'form.error.pattern' };

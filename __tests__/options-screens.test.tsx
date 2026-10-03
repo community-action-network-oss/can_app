@@ -91,6 +91,8 @@ beforeEach(() => {
     const req = r as Request;
     const path = new URL(req.url).pathname;
     if (path.startsWith('/v1/content-schemas/')) return json(200, dto);
+    if (path === '/v1/stages/s1')
+      return json(200, { id: 's1', name: 'map_faults', label: 'Map', criteria: [] });
     if (path.endsWith('/reply-allowance')) return json(200, allowance);
     if (req.method === 'POST') {
       posts.push({ path, body: await req.json() });

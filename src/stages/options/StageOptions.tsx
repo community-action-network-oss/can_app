@@ -21,8 +21,8 @@ export function StageOptions({ problemId, stageId }: { problemId: string; stageI
           problemId={problemId}
           stageId={stageId}
           canAdd={member}
-          goImprove={(id, s) =>
-            router.push({ pathname: '/problems/[id]/add', params: { id, stageId: s } })
+          goImprove={(id, s, improves) =>
+            router.push({ pathname: '/problems/[id]/add', params: { id, stageId: s, improves } })
           }
         />
       ) : q.isError ? (

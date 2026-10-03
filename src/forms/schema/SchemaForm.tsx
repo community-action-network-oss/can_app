@@ -46,6 +46,8 @@ type Props = {
   formError?: string;
   busy?: boolean;
   slots?: Ctx['slots'];
+  /** Options for stage_ref and criterion_ref pickers, by widget name. */
+  choices?: Ctx['choices'];
   /** Told about unsupported widgets (dotted path and widget name) so the host can log them. */
   onUnsupported?: (u: { path: string; widget: string; required: boolean }[]) => void;
 };
@@ -100,6 +102,7 @@ export function SchemaForm(p: Props) {
     assisted: p.assisted ?? NO_SET,
     readOnly: !!p.readOnly,
     slots: p.slots ?? NONE,
+    choices: p.choices ?? NONE,
     set: (path, v) => {
       onChange(setPath(value, path, v));
       if (errors[path]) setErrors(({ [path]: _gone, ...rest }) => rest);

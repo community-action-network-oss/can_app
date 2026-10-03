@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import type { TextInput } from 'react-native';
 
 import {
@@ -48,7 +48,77 @@ export type Ctx = {
     (p: { path: string; value: unknown; onChange: (v: unknown) => void }) => ReactNode
   >;
   ref: (path: string) => (el: TextInput | null) => void;
+  /** Picker options per widget name (stage_ref, criterion_ref), from the host. `preset` fills an empty field once. */
+  choices: Record<string, { options: { value: string; label: string }[]; preset?: string }>;
 };
+
+/** A pick over host supplied options; without any the field falls back to plain text. */
+function PickField({
+  widget,
+  label,
+  help,
+  error,
+  required,
+  path,
+  value,
+  ctx,
+  numeric,
+}: {
+  widget: string;
+  label: string;
+  help?: string;
+  error?: string;
+  required: boolean;
+  path: string;
+  value: unknown;
+  ctx: Ctx;
+  numeric: boolean;
+}) {
+  const c = ctx.choices[widget];
+  const preset = c?.preset;
+  useEffect(() => {
+    if (preset !== undefined && value === undefined && !ctx.readOnly)
+      ctx.set(path, numeric ? Number(preset) : preset);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preset, value]);
+  const shown = value == null ? undefined : String(value);
+  if (ctx.readOnly)
+    return (
+      <FormField label={label} hint={help}>
+        <CivicText>{c?.options.find((o) => o.value === shown)?.label ?? shown ?? ''}</CivicText>
+      </FormField>
+    );
+  if (!c?.options.length)
+    return (
+      <TextField
+        ref={ctx.ref(path)}
+        label={label}
+        accessibilityLabel={label}
+        hint={help}
+        error={error}
+        required={required}
+        value={shown ?? ''}
+        inputMode={numeric ? 'numeric' : undefined}
+        onChangeText={(x) =>
+          ctx.set(
+            path,
+            numeric ? (x.replace(/\D/g, '') === '' ? undefined : Number(x.replace(/\D/g, ''))) : x,
+          )
+        }
+      />
+    );
+  return (
+    <ChoiceField
+      label={label}
+      hint={help}
+      options={c.options}
+      value={shown}
+      onChange={(x) => ctx.set(path, numeric ? Number(x) : x)}
+      error={error}
+      required={required}
+    />
+  );
+}
 
 /** Renders one schema node at a dotted path. A registry in spirit: widget name decides the control, the node supplies everything else. */
 export function FieldNode({
@@ -213,6 +283,25 @@ export function FieldNode({
     );
   }
 
+  if (widget === 'stage_ref' || widget === 'criterion_ref') {
+    return (
+      <Box className="gap-1">
+        <PickField
+          widget={widget}
+          label={label}
+          help={help}
+          error={error}
+          required={required}
+          path={path}
+          value={v}
+          ctx={ctx}
+          numeric={widget === 'criterion_ref'}
+        />
+        {extras}
+      </Box>
+    );
+  }
+
   if (widget === 'readonly') {
     return (
       <FormField label={label} hint={help}>
@@ -268,10 +357,11 @@ export function FieldNode({
 
   // text-like (also the safe rendering for any known widget without a special control)
   const text = typeof v === 'string' ? v : '';
+  const readText = widget === 'number' && v != null ? String(v) : text;
   const max = g?.max_chars ?? node.maxLength;
   control = ctx.readOnly ? (
     <FormField label={label} hint={help}>
-      <CivicText>{text}</CivicText>
+      <CivicText>{readText}</CivicText>
     </FormField>
   ) : isUnknown ? null : (
     <TextField
@@ -281,13 +371,25 @@ export function FieldNode({
       hint={help}
       error={error}
       required={required}
-      value={text}
-      onChangeText={(x) => ctx.set(path, x)}
+      value={widget === 'number' ? (v == null ? '' : String(v)) : text}
+      onChangeText={(x) =>
+        // ponytail: whole numbers only (digits kept); add decimals when a schema needs them.
+        ctx.set(
+          path,
+          widget === 'number' ? (/\d/.test(x) ? Number(x.replace(/\D/g, '')) : undefined) : x,
+        )
+      }
       multiline={widget === 'textarea'}
       maxLength={
         widget === 'textarea' || widget === 'text' ? (max as number | undefined) : undefined
       }
-      inputMode={widget === 'url' ? 'url' : undefined}
+      inputMode={
+        widget === 'url' || widget === 'evidence_url'
+          ? 'url'
+          : widget === 'number'
+            ? 'numeric'
+            : undefined
+      }
     />
   );
   return (

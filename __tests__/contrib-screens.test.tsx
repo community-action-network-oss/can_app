@@ -81,7 +81,14 @@ beforeEach(() => {
     if (path === '/v1/problems/p1')
       return json(200, { id: 'p1', allowedContributionTypes: allowed });
     if (path === '/v1/stages/s1')
-      return json(200, { id: 's1', chip: 'Open', allowedContributionTypes: ['risk'] });
+      return json(200, {
+        id: 's1',
+        chip: 'Open',
+        name: 'map',
+        label: 'Map',
+        criteria: [],
+        allowedContributionTypes: ['risk'],
+      });
     if (path.startsWith('/v1/content-schemas/')) return json(200, dto);
     if (path.endsWith('/reply-allowance')) return allowance();
     if (req.method === 'POST') {

@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react';
 
 import { Box, CivicButton, CivicHeading, CivicText, StatusMessage } from '../../components/civic';
 import { ReplyAllowance, timeOf } from '../../contributions/ReplyAllowance';
-import { useReplyAllowance, type PostFailure } from '../../contributions/api';
+import { useReplyAllowance, useStage, type PostFailure } from '../../contributions/api';
 import { SchemaForm } from '../../forms/schema/SchemaForm';
 import type { Schema, Value } from '../../forms/schema/model';
+import { stageChoices } from '../../forms/schema/stageChoices';
 import { useContentSchema } from '../../forms/schema/useContentSchema';
 import { useT } from '../../i18n';
 import { postOption } from './api';
@@ -26,6 +27,7 @@ export function OptionForm({ problemId, stageId }: { problemId: string; stageId:
   const qc = useQueryClient();
   const schemaQ = useContentSchema('stage_option');
   const allowance = useReplyAllowance(problemId);
+  const stage = useStage(stageId);
   const [value, setValue] = useState<Value>({});
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
@@ -137,6 +139,7 @@ export function OptionForm({ problemId, stageId }: { problemId: string; stageId:
             onChange={setValue}
             onSubmit={(a) => void onSubmit(a)}
             submitLabel={t('contrib.add.post')}
+            choices={stageChoices(stage.data)}
             submitDisabled={atLimit}
             busy={busy}
             fieldErrors={Object.fromEntries(

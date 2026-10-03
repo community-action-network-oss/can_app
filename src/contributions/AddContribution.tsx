@@ -12,6 +12,7 @@ import {
 } from '../components/civic';
 import { SchemaForm } from '../forms/schema/SchemaForm';
 import { msg, type Schema, type Value } from '../forms/schema/model';
+import { stageChoices } from '../forms/schema/stageChoices';
 import { useContentSchema } from '../forms/schema/useContentSchema';
 import { useT, type MessageId } from '../i18n';
 import { useProblem } from '../problems/useProblem';
@@ -33,10 +34,21 @@ const bodyPath = (p: string) =>
     .filter(Boolean)
     .join('.');
 
+const IMPROVEMENT = 'proposal_improvement';
+
 const later = (a: Date | null, b: Date | null) => (a && b ? (a > b ? a : b) : (a ?? b));
 
 // WF-CONTRIB-2. A shell: the form comes from the contribution schema; no field is named here (D-58).
-export function AddContribution({ problemId, stageId }: { problemId: string; stageId?: string }) {
+export function AddContribution({
+  problemId,
+  stageId,
+  improves,
+}: {
+  problemId: string;
+  stageId?: string;
+  /** Id of the option or proposal this reply improves (from "Suggest an improvement"). */
+  improves?: string;
+}) {
   const t = useT();
   const qc = useQueryClient();
   const problem = useProblem(problemId);
@@ -73,6 +85,12 @@ export function AddContribution({ problemId, stageId }: { problemId: string; sta
     );
   }
 
+  // Opened from "Suggest an improvement": the improvement form is already chosen.
+  if (improves && !type && allowed.includes(IMPROVEMENT)) {
+    setType(IMPROVEMENT);
+    setValue({ type: IMPROVEMENT, target: problemId, improves });
+  }
+
   const limit = capped?.limit ?? allowance.data?.limit;
   const remaining = capped ? 0 : allowance.data?.remaining;
   const resetsAt = capped ? capped.resetsAt : (allowance.data?.resetsAt ?? null);
@@ -82,7 +100,11 @@ export function AddContribution({ problemId, stageId }: { problemId: string; sta
 
   const pick = (v: string) => {
     setType(v);
-    setValue({ type: v, target: problemId });
+    setValue({
+      type: v,
+      target: problemId,
+      ...(improves && v === IMPROVEMENT ? { improves } : {}),
+    });
     setFail(null);
     setSent(false);
     setKept([]);
@@ -221,6 +243,7 @@ export function AddContribution({ problemId, stageId }: { problemId: string; sta
             onChange={setValue}
             onSubmit={(a) => void onSubmit(a)}
             submitLabel={t('contrib.add.post')}
+            choices={stageChoices(stage.data)}
             submitDisabled={waiting}
             busy={busy}
             fieldErrors={fieldErrors}

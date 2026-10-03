@@ -90,7 +90,7 @@ function Card({ item, n, problemId, stageId, canAdd, goImprove }: CardProps) {
           variant="secondary"
           label={t('option.improve')}
           accessibilityLabel={`${t('option.improve')}: ${title}`}
-          onPress={() => goImprove(problemId, stageId)}
+          onPress={() => goImprove(problemId, stageId, item.id)}
         />
       ) : null}
     </Box>
@@ -102,7 +102,7 @@ type CardProps = {
   problemId: string;
   stageId: string;
   canAdd: boolean;
-  goImprove: (problemId: string, stageId: string) => void;
+  goImprove: (problemId: string, stageId: string, optionId: string) => void;
 };
 
 const cell = 'flex-1 p-2 border border-can-border';
@@ -113,7 +113,7 @@ export function OptionsComparison(p: {
   problemId: string;
   stageId: string;
   canAdd: boolean;
-  goImprove: (problemId: string, stageId: string) => void;
+  goImprove: (problemId: string, stageId: string, optionId: string) => void;
 }) {
   const t = useT();
   const { width } = useWindowDimensions();

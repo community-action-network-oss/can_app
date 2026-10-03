@@ -13,12 +13,20 @@ import { RequireAuth } from '../../../src/session/RequireAuth';
  [ Post ]
 */
 export default function AddContributionRoute() {
-  const p = useLocalSearchParams<{ id: string | string[]; stageId?: string | string[] }>();
+  const p = useLocalSearchParams<{
+    id: string | string[];
+    stageId?: string | string[];
+    improves?: string | string[];
+  }>();
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
   return (
     <Screen>
       <RequireAuth>
-        <AddContribution problemId={one(p.id) ?? ''} stageId={one(p.stageId) || undefined} />
+        <AddContribution
+          problemId={one(p.id) ?? ''}
+          stageId={one(p.stageId) || undefined}
+          improves={one(p.improves) || undefined}
+        />
       </RequireAuth>
     </Screen>
   );
