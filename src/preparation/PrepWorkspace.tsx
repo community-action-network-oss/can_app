@@ -8,7 +8,7 @@ import { useT, type MessageId } from '../i18n';
 import { SourcesPart } from './SourcesPart';
 import { usePrepActions, usePreparation, useServerDraft, type PrepPart } from './usePreparation';
 
-export type PrepLinks = { facts: string; criteria: string; stages: string };
+export type PrepLinks = { facts: string; criteria: string; stages: string; review?: string };
 type Props = { id: string; links: PrepLinks; sourcesKey: string };
 
 const EDITABLE = ['draft', 'needs_revision', 'in_review'];
@@ -146,6 +146,14 @@ export function PrepWorkspace({ id, links, sourcesKey }: Props) {
         <Box className="gap-1" testID="prep-in-review">
           <CivicText>{t('prep.sendReview.note')}</CivicText>
           <CivicText>{t('prep.review.notLive')}</CivicText>
+          {links.review ? (
+            <CivicButton
+              variant="secondary"
+              label={t('vreview.resolve.open')}
+              accessibilityLabel={t('vreview.resolve.open')}
+              onPress={() => router.push(links.review as never)}
+            />
+          ) : null}
         </Box>
       ) : null}
       <CivicText testID="prep-progress">

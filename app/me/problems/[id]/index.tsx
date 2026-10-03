@@ -15,7 +15,12 @@ export default function PrepRoute() {
         <PrepWorkspace
           id={did}
           sourcesKey="sources"
-          links={{ facts: `${base}/facts`, criteria: `${base}/criteria`, stages: `${base}/stages` }}
+          links={{
+            facts: `${base}/facts`,
+            criteria: `${base}/criteria`,
+            stages: `${base}/stages`,
+            review: `${base}/review`,
+          }}
         />
       </RequireAuth>
     </Screen>
